@@ -1,0 +1,52 @@
+---
+name: dz-thumbnail
+description: يصمم كفر الريل (أول فريم بالفيديو، كل المهم بمربع 1:1 فينقرا بشبكة البروفايل) وثمبنيل يوتيوب 16:9 بثلاث أفكار — بأحجام تنقرا بشاشة الجوال. Use when user says "سو كفر"، "كفر الريل"، "غلاف الريل"، "ثمبنيل"، "ثمب يوتيوب"، "صورة مصغرة"، "thumbnail"، "الكفر ما يبين"، or after any finished video. Not for carousel covers. Darija triggers: "دير لي غلاف"، "دير thumbnail".
+---
+
+> **🇩🇿 wailzenz-video-dz:** Arabic = **Algerian Darija** — write and correct every Arabic word per `${CLAUDE_SKILL_DIR}/../dz-reel/references/dialect-dz.md` (never the Gulf word lists in the original text). French/English terms stay in Latin letters + an Arabic gloss in quotes. Start shell commands with `source "${CLAUDE_SKILL_DIR}/../../setup/env.sh"`; transcribe with `${CLAUDE_SKILL_DIR}/../dz-reel/scripts/02a_transcribe_dz.py`. The full Algerian rules are at the top of `../dz-reel/SKILL.md`.
+
+
+# الكفر والثمبنيل — اللي ينقرا بالجوال
+
+**المحرّك مشترك** مع سكل الريل. كل `scripts/` و`references/` من هني:
+`${CLAUDE_SKILL_DIR}/../dz-reel`
+
+**اقرأ أول شي:** `references/thumbnails.md` — الأحجام الدنيا ومصادرها. الشبكة تصغّر الكفر لـ12٪، فاللي تحت الحد ما ينقرا.
+
+## قبل ما تبدأ — سؤال واحد
+**«آخذ صورتك من الفيديو، ولا عندك صور تعطيني؟»**
+- **من الفيديو:** السكربت يختار أوضح فريم ووجهك كبير فيه، ويقصّك على خلفية كريمية (`--cut` للكفر · `--video` للثمبنيل — يحتاج ماك).
+- **صورك:** صورة مقصوصة بخلفية شفافة (`--photo`) — الأحسن للثمبنيل: انفعال واضح (ابتسامة كبيرة، دهشة).
+- لو ما رد: من الفيديو.
+
+**التصميم من موضوع الفيديو كل مرة — مو قالب:** العنوان من كلامه، والشعارات/العناصر من اللي يتكلم عنه (أداة، شركة، رقم). الهيكل ثابت والمحتوى يتغيّر.
+**الخلفية كريمية مثل كلود** (`#F0EEE6`، أو `bg` الثيم لو فاتح) — `--bg` يغيّرها، و`--bg video` ياخذ لون خلفية الفيديو.
+
+## كفر الريل (9:16) — ويصير أول فريم بالفيديو
+
+```bash
+python3 scripts/28_cover.py <work> "سطر|*كلمة مميزة*" [--photo me.png | --cut] [--x قديم.png --ok جديد.png] [--first ad-master.mp4]
+python3 scripts/34_phone_preview.py <work>/cover.jpg
+```
+
+- كل المهم داخل مربع 1:1 بالنص — وهمي، بلا إطار.
+- العنوان 5 كلمات بالكثير، سطرين، ≈9 أحرف بالسطر (السكربت ينبّهك).
+- ✕ و✓ **مو قاعدة** — بس لو الفيديو «من كذا لكذا». الشعارات صف فوق الراس داخل المربع، والكلام تحت على الصدر.
+- `--first` يركّب الكفر أول فريم ← `<الاسم>-cover.mp4`.
+- اعرض `cover_phone.jpg` (بحجمه الحقيقي بالجوال) — لو ما قريته فيها، ما ينقرا.
+
+## ثمبنيل يوتيوب (16:9) — ثلاث أفكار
+
+```bash
+python3 scripts/33_thumb.py <work> "سطر|*كلمة مميزة*" [--photo me.png | --video src.mov] [--logo شي.png] [--x قديم.png --ok جديد.png]
+python3 scripts/34_phone_preview.py <work>/thumb_A_1280.jpg --youtube
+```
+
+- يطلّع 3840×2160 (الموصى) + 1280×720 (للجوال، أقل من 2 ميقا) لكل فكرة، وورقة `thumbs_sheet.jpg` — اعرضها وخلّه يختار.
+- الوجه كبير بانفعال واضح · تحت يمين فاضي (مدة الفيديو) · 3-5 كلمات.
+
+## ⛔ أسلوبك
+
+- العنوان من محتوى الفيديو نفسه — هوك مختصر، لا تخترع كلام ما قاله.
+- ولا كلمة على الوجه. الخطوط Cairo (أو خط ثيمه).
+- اعرض الصورة قبل أي رفع أو نشر — لا نشر ولا جدولة.

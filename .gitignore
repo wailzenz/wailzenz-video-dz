@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.pyc
+node_modules/
+package-lock.json
+*.part
+work/
+skills/dz-reel/bin/
+skills/dz-reel/motion/vendor/

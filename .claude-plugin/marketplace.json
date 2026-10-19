@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "wailzenz-video-dz",
+  "description": "wailzenz-video-dz — Algerian (Darija) video editing for Claude Code",
+  "owner": {
+    "name": "wailzenz",
+    "url": "https://github.com/wailzenz"
+  },
+  "plugins": [
+    {
+      "name": "wailzenz-video-dz",
+      "description": "Talking-head reels, podcasts, montages, motion explainers and covers in Algerian Darija — word-by-word Arabic captions with Arabic glosses for French/English terms.",
+      "version": "1.0.0",
+      "author": { "name": "wailzenz" },
+      "source": "./",
+      "category": "media",
+      "homepage": "https://github.com/wailzenz/wailzenz-video-dz"
+    }
+  ]
+}
