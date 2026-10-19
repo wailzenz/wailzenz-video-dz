@@ -8,7 +8,8 @@ description: مونتاج فيديو هدرة للكاميرا (talking head) إ
 > 2. **French/English terms** stay in Latin letters with an Arabic gloss in quotes after them — «هادي حاجة normal "عادية"» — via `"gloss"` in `fixes.json` (step 5). Every Latin term gets one.
 > 3. **Environment:** start every shell command with `source "${CLAUDE_SKILL_DIR}/../../setup/env.sh"` (Python 3.12 env, ffmpeg-full, models in `~/.wailzenz-video-dz`). First time on a machine? Run `bash "${CLAUDE_SKILL_DIR}/../../setup/setup-mac.sh"` (ask the user first — it downloads ~4 GB). Never `pip install` into the system Python.
 > 4. **Transcription** (step 4) uses `scripts/02a_transcribe_dz.py`: whisper.cpp large-v3 on the Mac GPU, or `--engine hadra` (Algerian model) / `--engine whisper` (any OS). Never `python3 -m whisper --model medium`.
-> 5. **Updates** only through the plugin manager (`00_setup.sh` prints the command). Never overwrite the skill's files.
+> 5. **Close-up framing:** if the chin sits below y ≈ 1250 (caption box would touch the face), set `theme.json` → `"capY": 450` (+ `"capYFrom"` after an opening hook) — the box moves above the head. Check `08_safe_check.js` afterwards.
+> 6. **Updates** only through the plugin manager (`00_setup.sh` prints the command). Never overwrite the skill's files.
 
 # ريل من فيديو كلام — بلا برنامج مونتاج
 

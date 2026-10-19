@@ -33,7 +33,7 @@ What it installs (it skips anything already there):
 
 You also need **Google Chrome** installed in `/Applications`.
 
-**Hardware:** Apple Silicon with 8 GB RAM works (one heavy job at a time); 16 GB is comfortable. The Algerian Hadra engine peaks at about 6 GB of RAM — close other apps when you use it.
+**Hardware:** Apple Silicon with 8 GB RAM works (one heavy job at a time); 16 GB is comfortable. The Algerian Hadra engine needs a 16 GB machine in practice; on 8 GB, stay with the default whisper.cpp engine.
 
 ## 2b. Windows / Linux (experimental — reports welcome)
 

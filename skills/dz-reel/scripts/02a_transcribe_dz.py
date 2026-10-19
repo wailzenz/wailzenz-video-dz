@@ -74,12 +74,46 @@ def cpp_available(lang):
     return bool(shutil.which("whisper-cli")) and cpp_model(lang) is not None
 
 
+def speech_onsets(wav, hop=0.01):
+    """Per-10 ms 'is someone speaking' flags (RMS above the clip's noise floor + 15 dB)."""
+    import numpy as np, soundfile as sf
+    x, sr = sf.read(wav, dtype="float32")
+    if x.ndim > 1: x = x.mean(1)
+    n = int(sr * hop); frames = len(x) // n
+    rms = 20 * np.log10(np.sqrt((x[:frames * n].reshape(frames, n) ** 2).mean(1)) + 1e-9)
+    floor = np.percentile(rms, 10)
+    return rms > max(floor + 15, -50), hop
+
+
+def snap_starts(words, wav):
+    """whisper's time for the first word of a sentence is often early (it can sit in the silence before you
+    speak). Move such starts forward to where the voice actually begins, never past the next word."""
+    try:
+        act, hop = speech_onsets(wav)
+    except Exception:
+        return words
+    out = []
+    for i, (t, a, b, p) in enumerate(words):
+        prev_end = out[-1][2] if out else 0.0
+        nxt = words[i + 1][1] if i + 1 < len(words) else b
+        if a - prev_end > 0.25 or i == 0:                     # a sentence start: after a pause, or the very first word
+            lo, hi = int(max(a, prev_end) / hop), int(max(min(nxt, b) - 0.05, a) / hop)
+            hit = next((k for k in range(lo, min(hi, len(act))) if act[k]), None)
+            if hit is not None and hit * hop > a:
+                a = hit * hop
+        out.append((t, a, max(b, a + 0.08), p))
+    return out
+
+
 def run_cpp(wav, work, lang, prompt):
+    """whisper.cpp with DTW token timestamps (flash attention must be off for DTW) — the plain segment offsets
+    run ~0.5 s early on Darija, so captions would show words before they are said."""
     model = cpp_model(lang)
     if not shutil.which("whisper-cli") or not model:
         sys.exit(f"❌ whisper.cpp not ready (whisper-cli on PATH + a model in {MODELS}) — run setup/setup-mac.sh, or use --engine whisper")
+    preset = "large.v3.turbo" if "turbo" in os.path.basename(model) else "large.v3"
     base = os.path.join(work, "a_cpp_raw")
-    cmd = ["whisper-cli", "-m", model, "-l", lang, "-f", wav, "-ml", "1", "-sow", "-ojf", "-of", base, "-np"]
+    cmd = ["whisper-cli", "-m", model, "-l", lang, "-f", wav, "-ojf", "--dtw", preset, "-nfa", "-of", base, "-np"]
     if prompt:
         cmd += ["--prompt", prompt]
     r = subprocess.run(cmd, capture_output=True, text=True)
@@ -88,9 +122,19 @@ def run_cpp(wav, work, lang, prompt):
     d = json.load(open(base + ".json", encoding="utf-8"))
     words = []
     for s in d.get("transcription", []):
-        ps = [t.get("p", 1.0) for t in s.get("tokens", []) if not t.get("text", "").startswith("[_")]
-        words.append((s["text"], s["offsets"]["from"] / 1000, s["offsets"]["to"] / 1000, sum(ps) / len(ps) if ps else 1.0))
-    return tidy(words)
+        seg_end = s["offsets"]["to"] / 1000
+        cur = []
+        toks = [t for t in s.get("tokens", []) if not t.get("text", "").startswith("[_")]
+        for t in toks:                                      # tokens → words: a leading space starts a new word
+            ts = t["t_dtw"] / 100 if t.get("t_dtw", -1) >= 0 else t["offsets"]["from"] / 1000
+            if not cur or t["text"].startswith(" "):
+                cur.append([t["text"].strip(), ts, [t.get("p", 1.0)]])
+            else:
+                cur[-1][0] += t["text"]; cur[-1][2].append(t.get("p", 1.0))
+        for i, (txt, ts, ps) in enumerate(cur):
+            end = cur[i + 1][1] if i + 1 < len(cur) else seg_end
+            words.append((txt, ts, end, sum(ps) / len(ps)))
+    return tidy(snap_starts(tidy(words), wav))
 
 
 def run_whisper(wav, lang, prompt):
@@ -113,7 +157,8 @@ def run_hadra(wav, lang, prompt):
     model = WhisperForConditionalGeneration.from_pretrained(base_id, dtype=torch.float32)
     model = PeftModel.from_pretrained(model, adapter_id).merge_and_unload()
     model.generation_config.forced_decoder_ids = None
-    dev = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+    dev = os.environ.get("WVD_TORCH_DEVICE") or ("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
+    # WVD_TORCH_DEVICE=cpu: on 8 GB Macs the MPS path keeps a CPU and a GPU copy of the model and can swap itself to a halt
     if dev != "cpu":
         model = model.half()   # fp32 peaked at ~9.8 GB on an 8 GB Mac; fp16 roughly halves it
     asr = pipeline("automatic-speech-recognition", model=model, tokenizer=proc.tokenizer,

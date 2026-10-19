@@ -34,8 +34,8 @@ python3 scripts/02a_transcribe_dz.py <work> [--engine auto|cpp|hadra|whisper|com
 
 | Engine | What | Notes |
 |---|---|---|
-| `cpp` | whisper.cpp large-v3, Metal GPU | Default on a Mac. Fast (seconds for a reel), ~2 GB RAM. Gets a short Darija prompt so it doesn't "correct" you into فصحى. |
-| `hadra` | [algerian-nlp/Hadra-ASR-whisper-medium](https://huggingface.co/algerian-nlp/Hadra-ASR-whisper-medium) (MIT) | Trained on Algerian Darja. ~1.8 GB download, ~6 GB RAM. Its published scores are self-reported — test it on your voice. |
+| `cpp` | whisper.cpp large-v3, Metal GPU | Default on a Mac. ~20 s for a 1-minute reel, ~2 GB RAM. Word times come from DTW alignment, and each sentence's first word is snapped to where the voice really starts (plain whisper.cpp times ran ~0.5 s early). Gets a short Darija prompt so it doesn't "correct" you into فصحى. |
+| `hadra` | [algerian-nlp/Hadra-ASR-whisper-medium](https://huggingface.co/algerian-nlp/Hadra-ASR-whisper-medium) (MIT) | Trained on Algerian Darja. ~1.8 GB download. **Needs a 16 GB machine in practice** — on an 8 GB Mac it swapped to a halt on a 48 s clip, on the GPU and on the CPU (`WVD_TORCH_DEVICE=cpu`). Its published scores are self-reported — test it on your voice. |
 | `whisper` | openai-whisper large-v3 | Any OS; NVIDIA GPU if present, else CPU (slow). |
 | `compare` | runs `cpp` (or `whisper`) and `hadra` | Writes `a_cpp.json` / `a_hadra.json` side by side. Keep the one that needed fewer fixes: `--save-default hadra`. |
 
@@ -53,9 +53,14 @@ python3 scripts/02a_transcribe_dz.py <work> [--engine auto|cpp|hadra|whisper|com
 - `fix` — one list per Whisper sentence, **same word count** as Whisper's (timings stay exact). A string instead of a list = Whisper hallucinated; the words are spread over the sentence.
 - `gloss` — the Arabic meaning shown in quotes after a French/English term. Keys are the term exactly as in `fix` (one word or a phrase). `02_captions.py` warns about any Latin term without one.
 - `hot_latin` (default `true`) — Latin-script terms are highlighted automatically. `gloss_quotes` (default `""`) — e.g. `"()"` for parentheses.
+- `gloss_repeat` (default `false`) — a term is glossed the first time it appears in the video only; `true` glosses every time. Punctuation after a term moves after its gloss («software "برمجيات"،»), and a gloss never starts a caption page on its own.
 - `hot` — Arabic words highlighted when spoken. `fx` — word effects: drop, shake, crack, type, pulse, stretch (kashida), slam.
 
 See [`examples/fixes.example.json`](../examples/fixes.example.json).
+
+## Caption position
+
+Filmed close to the camera, your chin sits where the caption box goes (bottom edge y = 1460). Put the box in the space above your head with `theme.json` → `"capY": 450` (its bottom edge in px; 450 keeps a 3-line page under the top safe zone), and `"capYFrom": 4.9` to start after an opening hook or "layers" sentence.
 
 ## The Algerian layer
 

@@ -8,7 +8,7 @@ These rules override the Gulf/Kuwaiti wording inside the original skill text.
 
 | Topic | Default |
 |---|---|
-| French/English words in captions | Latin letters, followed by an Arabic gloss in quotes: «هادي حاجة normal "عادية"» · «Claude Code "كلود كود"». In `fixes.json`: `"gloss": {"normal": "عادية", "Claude Code": "كلود كود"}`. Terms are highlighted automatically (`"hot_latin": false` to stop). `"gloss_quotes": "()"` switches to parentheses. `02_captions.py` lists any Latin term you forgot to gloss. |
+| French/English words in captions | Latin letters, followed by an Arabic gloss in quotes: «هادي حاجة normal "عادية"» · «Claude Code "كلود كود"». In `fixes.json`: `"gloss": {"normal": "عادية", "Claude Code": "كلود كود"}`. Terms are highlighted automatically (`"hot_latin": false` to stop). Glossed the first time they appear only (`"gloss_repeat": true` for every time). If the speaker translates the term out loud right after («skills أكثر أو مهارات أكثر»), skip the gloss. `"gloss_quotes": "()"` switches to parentheses. `02_captions.py` lists any Latin term you forgot to gloss. |
 | Transcription engine | `--engine auto`: whisper.cpp large-v3 on a Mac, openai-whisper large-v3 elsewhere. On a new speaker's first video run `--engine compare` (adds the Algerian Hadra model), keep the transcript that needed fewer fixes, and save it: `02a_transcribe_dz.py --save-default cpp|hadra|whisper`. |
 | Digits | Western (1 2 3) — the hook checker enforces it. |
 

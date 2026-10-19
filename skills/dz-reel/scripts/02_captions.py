@@ -29,6 +29,8 @@ FXMAP = fx.get("fx", {})   # 🎬 حركات الكلمة العربية (v3.1):
 GLOSS = {k.strip(): v for k, v in fx.get("gloss", {}).items()}
 GQ = fx.get("gloss_quotes", '""')
 HOT_LATIN = fx.get("hot_latin", True)
+GLOSS_REPEAT = fx.get("gloss_repeat", False)   # False = gloss a term the first time it appears in the video only
+GLOSSED = set()
 LAT = re.compile(r"[A-Za-zÀ-ɏ]")
 GPUNCT = ".,!?؟،:;…«»\"'"
 UNGLOSSED = []
@@ -42,12 +44,19 @@ def add_gloss(o):
             if key in GLOSS:
                 last = words[-1]
                 out.extend(words)
-                out.append({"t": GQ[0] + GLOSS[key] + GQ[-1], "s": last["s"], "e": last["e"], "hot": False, "gloss": True})
+                if GLOSS_REPEAT or key not in GLOSSED:
+                    tail = ""                     # «software،» → «software "برمجيات"،» — punctuation moves after the gloss
+                    while last["t"] and last["t"][-1] in "،,.?!؟:;…": tail = last["t"][-1] + tail; last["t"] = last["t"][:-1]
+                    out.append({"t": GQ[0] + GLOSS[key] + GQ[-1] + tail, "s": last["s"], "e": last["e"], "hot": False, "gloss": True})
+                else:
+                    last["_glossed"] = True   # already explained earlier in the video
+                GLOSSED.add(key)
                 i += n; break
         else:
             out.append(o[i]); i += 1
     run = []                                                 # Latin runs not followed by a gloss → reminder
     for w in out + [{"t": "", "gloss": False}]:
+        if w.pop("_glossed", False): run = []; continue
         if LAT.search(w["t"]) and not w.get("gloss"): run.append(w["t"]); continue
         if run and not w.get("gloss"): UNGLOSSED.append(" ".join(run))
         run = []

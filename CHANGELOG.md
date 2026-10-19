@@ -16,7 +16,13 @@ First release. Based on **majed-video 6.0.1** by Majed Alzaabi, plus ffmpeg-skil
 - `setup/setup-mac.sh` (one-command install into `~/.wailzenz-video-dz`) and `setup/env.sh`.
 - Docs in Arabic, English and French.
 
+- Precise word timing: whisper.cpp DTW alignment + snapping each sentence start to the real voice onset (captions were ~0.5 s early).
+- Glosses: first occurrence only by default (`gloss_repeat`), punctuation moves after the gloss, gloss lines stay on their term's caption page.
+- `theme.capY` / `capYFrom`: move full-screen captions above the head for close-up framing.
+- `WVD_TORCH_DEVICE` to force the Hadra engine's device.
+
 ### Fixed
+- Automatic brightness fix for dark videos (`25_scopes.py`) lifted a black backdrop to milky grey; it now uses a black-preserving mid-tone curve.
 - French/English phrases were reversed in captions, hook cards, podcast captions and the studio preview («le montage» → «montage le»;
   English-only lines read backwards). Each Latin run is now laid out left-to-right inside the RTL line.
 - `dz-ffmpeg`: ASS captions now use `Encoding=-1` for Arabic/Hebrew; upstream's `1` scrambled the word order of Arabic lines.

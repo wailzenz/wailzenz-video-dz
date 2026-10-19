@@ -124,7 +124,7 @@ def verdict(m):
             cb["gg"] = 1.0
     # مدّ النطاق: الأسود ينزل قريب 10 والأبيض يطلع قريب 240 — بس لو فيه مجال فعلي
     lo, hi = 0.0, 255.0
-    if (dark or flat) and (bl > 20 or wh < 225):
+    if (flat or (dark and bl > 20)) and (bl > 20 or wh < 225):   # wailzenz-video-dz: a dark video gets the curve below, not a stretch
         lo = max(0.0, bl - 10) if bl > 20 else 0.0
         hi = min(255.0, wh + 15) if wh < 225 else 255.0
         if hi - lo < 255 / 1.6:                          # سقف المدّ 1.6× — أكثر يحرق البشرة
@@ -137,8 +137,11 @@ def verdict(m):
         else:
             lo, hi = 0.0, 255.0
     med2 = (med - lo) / (hi - lo) * 255                      # الإضاءة الوسطى بعد المدّ
+    lift = 0.0
     if dark and med2 < 95:
-        eq["gamma"] = round(min(1.45, max(1.05, (115 / max(med2, 20)) ** 0.6)), 2)
+        # wailzenz-video-dz: a curve that lifts the mid-tones (the face) and keeps the black point — gamma lifted a
+        # black backdrop to milky grey on low-key talking heads, because the median is mostly backdrop.
+        lift = 0.15
     elif bright:
         eq["gamma"] = round(max(0.8, min(0.95, (140 / med) ** 0.5)), 2)
     if m["sat"] < 0.10:
@@ -147,7 +150,7 @@ def verdict(m):
     pf = m["per_frame_median"]                                 # غيمة · لمبة · تعريض تلقائي
     if len(pf) > 3 and max(pf) - min(pf) > 55:
         issues.append("الإضاءة تتغيّر بين أجزاء الفيديو")
-    return issues, {"cb": cb, "lv": lv, "eq": eq, "dark": dark, "bright": bright}
+    return issues, {"cb": cb, "lv": lv, "eq": eq, "dark": dark, "bright": bright, "lift": lift}
 
 
 def build_fx(P):
@@ -156,6 +159,9 @@ def build_fx(P):
         fx.append("colorchannelmixer=" + ":".join(f"{k}={v:.3f}" for k, v in P["cb"].items()))
     if P["lv"]:
         fx.append(P["lv"])
+    k = P.get("lift", 0)
+    if k:
+        fx.append(f"curves=master='0/0 0.12/{0.12 + 0.3 * k:.3f} 0.35/{0.35 + k:.3f} 0.7/{0.7 + 0.85 * k:.3f} 1/1'")
     if P["eq"]:
         fx.append("eq=" + ":".join(f"{k}={v:.2f}" for k, v in P["eq"].items()))
     return ",".join(fx)
@@ -187,6 +193,10 @@ def refine(imgs, P, rounds=6):
             return fx, None
         m2 = measure(out)
         ok = True
+        if P.get("lift") and m2["median"] < 50:          # only push further if it is still very dark
+            new = min(0.2, P["lift"] * (60 / max(m2["median"], 10)) ** 0.7)
+            ok = abs(new - P["lift"]) < 0.005
+            P["lift"] = new
         if "gamma" in eq and (P["dark"] and not 100 <= m2["median"] <= 130
                               or P["bright"] and not 120 <= m2["median"] <= 160):
             tgt = 115 if P["dark"] else 140

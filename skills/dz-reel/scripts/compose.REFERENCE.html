@@ -28,6 +28,9 @@ function init(d){
   FONT=t.font||FONT; HANDLE=t.handle||HANDLE; CAPSTYLE=t.capStyle||CAPSTYLE;
   ONACC=(typeof t.onAcc==='string'&&/^#[0-9A-Fa-f]{6}$/.test(t.onAcc))?t.onAcc:null;   /* لون النص فوق التمييز (صفحة التعارف تكتبه) — بدونه القاعدة القديمة */
   if(typeof t.faceAnchor==='number') FACE_ANCH=t.faceAnchor;
+  /* wailzenz-video-dz: theme.capY = the full-screen caption box's bottom edge in px (default 1460). Filmed close, the chin
+     sits where the box goes — capY ≈ 430 puts it in the space above the head. capYFrom = start time (s), e.g. after a hook. */
+  if(typeof t.capY==='number') CAP_Y=Math.max(260,Math.min(1460,t.capY)); if(typeof t.capYFrom==='number') CAP_Y_FROM=t.capYFrom;
   if(typeof t.cardZoom==='number') CARD_ZOOM=t.cardZoom;
   if(typeof t.badgeUntil==='number') BADGE_UNTIL=t.badgeUntil;
   if(typeof t.badge==='boolean') BADGE_UNTIL=t.badge?3:0;   /* توافق: مشاريع كتبت badge:false */
@@ -312,7 +315,7 @@ function caption(t){
   if(rt<0.13){const k=rt/0.13;a=k;if(!CAP_STILL)dy=-(1-k)*10;}
   /* ⛔ سطران بالكثير (طلب المستخدم 5 سبتمبر): الجملة الطويلة تنقسم لصفحات من سطرين، وتُعرض الصفحة اللي فيها الكلمة المنطوقة */
   let L=layout(c.w);
-  if(L.length>MAXLINES){const pages=[];for(let i=0;i<L.length;i+=MAXLINES)pages.push(L.slice(i,i+MAXLINES));
+  if(L.length>MAXLINES){const pages=[];for(let i=0;i<L.length;){let n=MAXLINES;while(i+n<L.length&&L[i+n].items[0]&&L[i+n].items[0].gloss)n++;pages.push(L.slice(i,i+n));i+=n;}
     let pg=pages.find(p=>{const f=p[0].items[0],l=p[p.length-1].items[p[p.length-1].items.length-1];return t>=f.s&&t<l.e;});
     if(!pg){pg=pages.find(p=>t<p[0].items[0].s)||pages[pages.length-1];}
     L=pg;}
@@ -383,7 +386,7 @@ function caption(t){
     const LH2=Math.round(FS2*1.33); const bh2=LL.length*LH2;
     /* ⛔ قاعدة ماجد (23 سبتمبر): الكابشن ما ينكتب على وجهه أبداً. الستايلات بلا كرت كانت تثبّت عند 1400
        مهما كان وضع الفيديو، فبوضع الكرت (R_DOWN/R_LOWER) تطيح الكلمات على وجهه. الحين تطلع فوق الكرت. */
-    const _Rc=vtarget(t), by2=(_Rc.y>700&&!_Rc.off)?Math.max(200,_Rc.y-46-bh2):(1400-bh2);
+    const _Rc=vtarget(t), by2=(_Rc.y>700&&!_Rc.off)?Math.max(200,_Rc.y-46-bh2):((t>=CAP_Y_FROM&&CAP_Y<1460?CAP_Y:1400)-bh2);
     X.save();X.globalAlpha=a;X.translate(540,by2+bh2/2+dy);X.scale(sc,sc);X.translate(-540,-(by2+bh2/2));
     X.textAlign='right';X.textBaseline='middle'; X.font='900 '+FS2+'px '+FONT;
     let lastX=null,lastY=null;
@@ -395,7 +398,7 @@ function caption(t){
   const _R=vtarget(t), LOW=_R.y>700&&!_R.off;   /* R_OFF: الكابشن يبقى تحت عند 1460 · مستطيل الهدف لا المتحرّك: الكابشن يثبت بمكانه من أول فريم بلا قفزة */          /* R_DOWN أو R_LOWER → الكابشن فوق كرت الفيديو */          /* الفيديو تحت → الكابشن فوقه */
   const CUT=(cutoutActive(t)||headoutActive(t))&&PTOP>200;   /* الكابشن فوق راسه بالوضعين */
   const SEAM=0;   /* ⛔ 23 سبتمبر: كان الكرت يركب 42٪ منه على حافة الفيديو فيغطي جبهة المتحدث — الحين فوق الكرت بالكامل */
-  const bx=540-bw/2,by=(CUT?PTOP-46:(LOW?_R.y-60+SEAM:1460))-bh;   /* 1460 عادةً · وعلى حافة الفيديو بوضع «الفيديو تحت» */
+  const bx=540-bw/2,by=(CUT?PTOP-46:(LOW?_R.y-60+SEAM:(t>=CAP_Y_FROM?CAP_Y:1460)))-bh;   /* 1460 عادةً · وعلى حافة الفيديو بوضع «الفيديو تحت» */
   X.save();X.globalAlpha=a;X.translate(540,by+bh/2+dy);X.scale(sc,sc);X.translate(-540,-(by+bh/2));
   sh(48,20,0.30);X.fillStyle=cBG(0.96);rr(bx,by,bw,bh,38);X.fill();nsh();
   X.strokeStyle=cINK(0.09);X.lineWidth=2.5;rr(bx,by,bw,bh,38);X.stroke();
@@ -427,7 +430,7 @@ window.__helpers={rr,sh,nsh,card,T,pr,ease,eio,back,lerp,cl};
    والكشيدة وحدها تمرّ ورا الراس. يشتغل بلحظات ملء الشاشة فقط. */
 const PRS=document.getElementById('PRS');
 let BEHIND=null, PRS_OK=false, PFACE=null;
-let CAPSTYLE='card';   /* theme.json ← capStyle:'shadow' = كلمات كبيرة بيضاء بظل بلا كرت (ستايل ثانٍ للكابشن، 16 سبتمبر) */
+let CAPSTYLE='card'; let CAP_Y=1460, CAP_Y_FROM=0;   /* wailzenz-video-dz: theme.capY / capYFrom */   /* theme.json ← capStyle:'shadow' = كلمات كبيرة بيضاء بظل بلا كرت (ستايل ثانٍ للكابشن، 16 سبتمبر) */
 const _MC=document.createElement('canvas'); _MC.width=W; _MC.height=H;
 const _MX=_MC.getContext('2d',{willReadFrequently:true});
 const _FC=document.createElement('canvas'); _FC.width=W; _FC.height=H;
