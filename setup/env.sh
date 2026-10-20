@@ -14,4 +14,3 @@ export NODE_PATH="$WVD_HOME/node_modules${NODE_PATH:+:$NODE_PATH}"
 export WHISPER_CPP_MODELS="${WHISPER_CPP_MODELS:-$WVD_HOME/models}"
 export DZ_DIALECT="${DZ_DIALECT:-dz}"                     # dz = Algerian Darija hook rules · kw = original Kuwaiti rules
 export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-export HYPERFRAMES_NO_TELEMETRY=1 DO_NOT_TRACK=1 HYPERFRAMES_SKIP_SKILLS=1   # only matters if HyperFrames is also installed

@@ -13,12 +13,14 @@ silences et erreurs coupés, sous-titres arabes mot par mot, motion design, effe
 
 | | |
 |---|---|
-| ✂️ **Découpage** | Supprime les silences, les phrases répétées et les prises ratées — garde la dernière bonne prise |
+| ✂️ **Découpage soigné** | Ne coupe que les vraies pauses, jamais au milieu d'un mot ; sur une reprise, garde la deuxième prise |
 | 🗣️ **Transcription en darija** | Whisper large-v3 sur le GPU du Mac, ou un modèle entraîné sur la darija algérienne (Hadra) — comparez les deux sur votre voix |
 | 💬 **Sous-titres arabes mot par mot** | Lettres liées, sens de droite à gauche, le mot prononcé s'allume |
 | 🇫🇷🇬🇧 **Mots français et anglais** | Gardés en lettres latines, suivis d'une traduction arabe entre guillemets : «هادي حاجة normal "عادية"» |
 | 🪝 **Hook à l'écran** | Une phrase forte dans les deux premières secondes, vérifiée en darija algérienne |
 | 🎬 **Motion design** | 100 animations prêtes, texte qui passe derrière votre tête, cartes, compteurs… |
+| 🔀 **Écran partagé qui alterne** | L'animation en haut et votre visage en bas, puis l'inverse — la mise en page change sans cesse |
+| 🧠 **Des visuels, pas un 2e sous-titre** | Les panneaux ne répètent jamais les mots du sous-titre : icônes, maquettes (terminal, timeline), tableaux comparatifs |
 | 🔊 **Audio** | Nettoyage de la voix, effets sonores libres de droits, volume à −14 LUFS |
 | 🎙️ **Plus que des reels** | Podcast → reels, montage sur le rythme, vidéos motion sans tournage, miniatures |
 
@@ -58,7 +60,9 @@ Mettez la vidéo dans un dossier et dites à Claude :
 
 Basé sur **[majed-video](https://github.com/majedphotos/video-ad-editor)** de **Majed Alzaabi** (MIT) — le moteur, les animations et la méthode de montage sont son travail ; merci à lui.
 Ce plugin ajoute la couche algérienne : transcription en darija, règles de hook algériennes, traduction arabe des termes en lettres latines, et correction de l'ordre des mots français/anglais dans les sous-titres.
-Il inclut aussi [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) et le skill [sound-effects](https://github.com/Barty-Bart/motion-graphics). Liste complète : [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Il ajoute aussi un style maison : écran partagé qui alterne haut/bas, panneaux qui ne répètent pas le sous-titre, découpage soigné. Liste complète : [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+![](docs/img/split-screens.png)
 
 ## Licence
 

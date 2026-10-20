@@ -26,7 +26,7 @@ What it installs (it skips anything already there):
 | Where | What |
 |---|---|
 | Homebrew | `ffmpeg-full` (captions need its libass + HarfBuzz — the plain `ffmpeg` formula can't burn subtitles), `whisper-cpp`, `uv`, `node` |
-| `~/.wailzenz-video-dz/py` | Python 3.12 with openai-whisper, PyTorch, transformers, peft, librosa, ffmpeg-normalize… (your system Python is not touched) |
+| `~/.wailzenz-video-dz/py` | Python 3.12 with openai-whisper, PyTorch, transformers, peft, soundfile, scipy, Pillow (your system Python is not touched) |
 | `~/.wailzenz-video-dz/models` | `ggml-large-v3-q5_0.bin` (Arabic, 1.1 GB), `ggml-large-v3-turbo-q5_0.bin` (English/French, 0.6 GB) from huggingface.co/ggerganov/whisper.cpp |
 | `~/.wailzenz-video-dz/bin` | links to ffmpeg-full, DeepFilterNet 0.5.6 (voice cleanup, from its official GitHub release) |
 | `~/.wailzenz-video-dz/node_modules` | `puppeteer-core` (drives your Google Chrome to render captions) |
@@ -40,7 +40,7 @@ You also need **Google Chrome** installed in `/Applications`.
 The skills run their scripts with `bash`, so on Windows use **Git Bash** (Git for Windows). Then install:
 
 1. **Python 3.12**, and create the env: `py -3.12 -m venv "%USERPROFILE%\.wailzenz-video-dz\py"` (Linux: `python3.12 -m venv ~/.wailzenz-video-dz/py`), then
-   `~/.wailzenz-video-dz/py/Scripts/pip install openai-whisper torch "transformers>=4.49" peft accelerate librosa soundfile numpy scipy matplotlib ffmpeg-normalize pillow`
+   `~/.wailzenz-video-dz/py/Scripts/pip install openai-whisper torch "transformers>=4.49" peft accelerate soundfile numpy scipy pillow sentencepiece protobuf`
    (with an NVIDIA GPU, install the CUDA build of PyTorch first — transcription is much faster).
 2. **ffmpeg** with libass: on Windows the "full" build from gyan.dev; on Linux your distro's `ffmpeg`. Check `ffmpeg -filters | grep subtitles`.
 3. **Node.js 20+** and **Google Chrome**, then `cd ~/.wailzenz-video-dz && npm i puppeteer-core`.

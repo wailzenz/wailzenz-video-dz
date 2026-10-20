@@ -9,16 +9,30 @@
 | `dz-montage` | A folder of clips with no talking → a montage cut on the beat |
 | `dz-motion` | A script or idea, no person on camera → a motion-graphics explainer |
 | `dz-thumbnail` | Covers and thumbnails |
-| `dz-ffmpeg` | Utility jobs: convert, loudness, B-roll cutaways, burned SRT/ASS captions |
-| `dz-sound-effects` | A measured sound-design pass with CC0 sound effects |
 
 You don't call them by name: say what you want and Claude picks the right one.
+
+## House style (built in)
+
+1. **Full scene design every time** — split screens, explainer panels, moves, transitions, a depth moment, SFX, end card.
+2. **Never duplicate the caption** — panels are visuals (icons, mockups, boards); they never show the words being captioned. Words big on screen → `nocap:true` for that sentence.
+3. **Careful cutting** — only real pauses (≥ 0.55 s, measured against the clip's own noise floor), every cut in silence, hesitations removed whole or not at all, restarts keep the second take; `01_cut_plan.py` self-checks and `19_seam_check.py` re-listens after the render.
+4. **Alternating layouts** — `R_DOWN` (animation top, face bottom) ↔ `R_UP` (face top, animation bottom) ↔ `R_LOWER` (big panel, small face) ↔ `R_FULL`.
+
+| Layout | Face | Panel | Caption |
+|---|---|---|---|
+| `R_FULL` | whole frame | — (or text over the video) | bottom |
+| `R_DOWN` | lower card | top (`panelIn`) | between them |
+| `R_UP` | top 960 px | bottom (`panelIn` moves there by itself) | under the face |
+| `R_LOWER` | small card at the bottom | big area on top | above the face card |
+
+See [`examples/scenes.example.js`](../examples/scenes.example.js) for a full reel's scenes, tied to word times.
 
 ## A reel, step by step (`dz-reel`)
 
 1. **Setup check** — `scripts/00_setup.sh` confirms ffmpeg, Python, Chrome and puppeteer-core.
 2. **Your look** — on the first video, onboarding saves your colours, fonts, logo and name to `~/.wailzenz-video-dz/profile.json`.
-3. **Cut plan** — silences out (`01_cut_plan.py`).
+3. **Cut plan** — real pauses out, every cut in silence, with a self-check (`01_cut_plan.py`).
 4. **Transcription** — `02a_transcribe_dz.py` writes word-timed `a.json`.
 5. **Correction + captions** — Claude fixes the Darija transcript into `fixes.json`, then `02_captions.py` builds `caps.json`.
 6. **You approve the script** — the full transcript is shown; you say what to drop.

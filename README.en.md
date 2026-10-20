@@ -13,12 +13,14 @@ silences and mistakes cut, word-by-word Arabic captions, motion graphics, sound 
 
 | | |
 |---|---|
-| ✂️ **Cutting** | Removes silences, repeated sentences and flubbed takes — keeps your last good take |
+| ✂️ **Careful cutting** | Cuts only real pauses, never inside a word; on a restart it keeps your second take |
 | 🗣️ **Darija transcription** | Whisper large-v3 on the Mac GPU, or an Algerian-trained model (Hadra) — compare both on your voice and keep the better one |
 | 💬 **Word-by-word Arabic captions** | Joined letters, right-to-left layout, the word you're saying lights up |
 | 🇫🇷🇬🇧 **French & English terms** | Kept in Latin letters, followed by an Arabic gloss in quotes: «هادي حاجة normal "عادية"» |
 | 🪝 **On-screen hook** | A strong line in the first two seconds, checked to be Algerian Darija (not Gulf words like «شلون» or «وايد») |
 | 🎬 **Motion graphics** | 100 ready-made moves, text passing behind your head, maps, counters, cards… |
+| 🔀 **Alternating split screens** | Animation on top with your face below, then your face on top with the animation below — the layout keeps changing |
+| 🧠 **Visuals, not a second caption** | Panels never repeat the words in the caption: icons, UI mockups (terminal, timeline), comparison boards |
 | 🔊 **Audio** | Voice cleanup, royalty-free sound effects, loudness to −14 LUFS |
 | 🎙️ **Beyond reels** | Podcast → reels, beat-synced montages, motion explainers with no filming, covers/thumbnails |
 
@@ -60,13 +62,18 @@ Claude only asks about what matters (colours, logo, what to cut) and shows you p
 |---|---|
 | ![](docs/img/captions-french.png) | ![](docs/img/hook-card.png) |
 
+Split screens — animation on top, then at the bottom:
+
+![](docs/img/split-screens.png)
+
+![](docs/img/bottom-panels.png)
+
 How it works, file formats and options: [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
 
 ## Credits
 
 Built on **[majed-video](https://github.com/majedphotos/video-ad-editor)** by **Majed Alzaabi** (MIT) — the engine, the motion moves and the whole editing method are his work; thank you.
-This plugin adds the Algerian layer: Darija transcription, Algerian hook rules, Arabic glosses for Latin-script terms, and a fix for French/English word order in captions.
-It also bundles [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) and the [sound-effects](https://github.com/Barty-Bart/motion-graphics) skill. Full list: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Changes: [CHANGELOG.md](CHANGELOG.md).
+This plugin adds the Algerian layer (Darija transcription, Algerian hook rules, Arabic glosses for Latin-script terms, French/English word order in captions) and a house style: alternating split screens, panels that never duplicate the caption, and careful cutting. Full list: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

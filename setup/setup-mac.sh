@@ -27,8 +27,7 @@ FFFULL="$(brew --prefix 2>/dev/null)/opt/ffmpeg-full/bin"
 PY="$WVD_HOME/py/bin/python"
 M_AR="ggml-large-v3-q5_0.bin"; M_EN="ggml-large-v3-turbo-q5_0.bin"
 HF="https://huggingface.co/ggerganov/whisper.cpp/resolve/main"
-PYPKGS=(pip openai-whisper torch "transformers>=4.49" peft accelerate librosa soundfile numpy scipy matplotlib
-        ffmpeg-normalize pillow sentencepiece protobuf)
+PYPKGS=(pip openai-whisper torch "transformers>=4.49" peft accelerate soundfile numpy scipy pillow sentencepiece protobuf)
 
 status(){
   echo "wailzenz-video-dz setup — $WVD_HOME"
@@ -38,7 +37,7 @@ status(){
   have uv && ok "uv" || miss "uv (brew)"
   have node && ok "node $(node -v)" || miss "node (brew)"
   [ -x "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ] && ok "Google Chrome" || miss "Google Chrome (https://www.google.com/chrome) — the caption engine renders with it"
-  [ -x "$PY" ] && "$PY" -c "import whisper, torch, transformers, peft, librosa" 2>/dev/null && ok "Python env" || miss "Python 3.12 env + packages"
+  [ -x "$PY" ] && "$PY" -c "import whisper, torch, transformers, peft, soundfile, scipy" 2>/dev/null && ok "Python env" || miss "Python 3.12 env + packages"
   [ -d "$WVD_HOME/node_modules/puppeteer-core" ] && ok "puppeteer-core" || miss "puppeteer-core"
   [ -x "$WVD_HOME/bin/deep-filter" ] && ok "DeepFilterNet (voice cleanup)" || miss "DeepFilterNet"
   [ -f "$WVD_HOME/models/$M_AR" ] && ok "Whisper large-v3 (Arabic, 1.1 GB)" || miss "Whisper large-v3 (Arabic, 1.1 GB)"
@@ -59,7 +58,7 @@ done
 FFFULL="$(brew --prefix)/opt/ffmpeg-full/bin"
 ln -sf "$FFFULL/ffmpeg" "$WVD_HOME/bin/ffmpeg"; ln -sf "$FFFULL/ffprobe" "$WVD_HOME/bin/ffprobe"   # ffmpeg-full is keg-only
 
-if ! { [ -x "$PY" ] && "$PY" -c "import whisper, torch, transformers, peft, librosa" 2>/dev/null; }; then
+if ! { [ -x "$PY" ] && "$PY" -c "import whisper, torch, transformers, peft, soundfile, scipy" 2>/dev/null; }; then
   echo "⏬ Python 3.12 env + packages (PyTorch is the big one)"
   [ -x "$PY" ] || uv venv --python 3.12 "$WVD_HOME/py" || exit 1
   uv pip install --python "$PY" "${PYPKGS[@]}" || exit 1

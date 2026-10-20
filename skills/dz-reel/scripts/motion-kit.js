@@ -17,9 +17,15 @@
   const eExpo = k => k >= 1 ? 1 : 1 - Math.pow(2, -10 * k);
   const eBack = k => { const s = 1.7; k = k - 1; return k * k * ((s + 1) * k + s) + 1; };
   const spring = k => k >= 1 ? 1 : 1 - Math.exp(-6 * k) * Math.cos(12 * k);
-  const C = () => G.X;                                  // كانفس المحرّك
-  const col = n => ({ BG: G.BG || '#F3EFEA', INK: G.INK || '#1F1F1D', ACC: G.ACC || '#D97757', CLAY: G.CLAY || '#BD5D3A', MUT: G.MUT || '#8A847A' })[n];
-  const font = (w, s) => w + ' ' + s + 'px ' + (G.FONT || 'Cairo');
+  // wailzenz-video-dz: the engine keeps X / BG / INK… as script-level bindings (not window.*), so read them directly —
+  // before, MK had no canvas in compose.html and fell back to its default cream/clay colours instead of theme.json.
+  const C = () => (typeof X !== 'undefined' ? X : G.X);                                  // كانفس المحرّك
+  const col = n => ({ BG: (typeof BG !== 'undefined' && BG) || G.BG || '#F3EFEA', INK: (typeof INK !== 'undefined' && INK) || G.INK || '#1F1F1D',
+    ACC: (typeof ACC !== 'undefined' && ACC) || G.ACC || '#D97757', CLAY: (typeof CLAY !== 'undefined' && CLAY) || G.CLAY || '#BD5D3A',
+    MUT: (typeof MUT !== 'undefined' && MUT) || G.MUT || '#8A847A' })[n];
+  // theme colour with alpha — the timeline used hard-coded purple/lime/red (purple is on the engine's banned list)
+  const hexA = (h, a) => { h = String(h || '#ffffff').replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
+  const font = (w, s) => w + ' ' + s + 'px ' + ((typeof FONT !== 'undefined' && FONT) || G.FONT || 'Cairo');
   const rrp = (x, y, w, h, r) => { const X = C(); X.beginPath(); X.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2)); };
   const fmt = n => Math.round(n).toLocaleString('en-US');
   const kfmt = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1000 ? (v / 1000).toFixed(1) + 'K' : String(Math.round(v));
@@ -174,26 +180,26 @@
   MK.timeline = function (t, o) {
     if (!live(t, o)) return; const X = C(), b = o.box, k = eo(pr(t, o.s, o.s + 0.5)); if (k <= 0) return;
     const steps = o.steps || [], rows = 3, rh = Math.min(70, (b.h - 140) / rows);
-    X.save(); X.globalAlpha *= k * out(t, o); shadow(40, 14, 0.12); X.fillStyle = '#6D5DF6'; rrp(b.x, b.y, b.w, b.h, 34); X.fill(); noShadow();
-    X.fillStyle = 'rgba(255,255,255,.85)'; X.font = font(800, 30); X.direction = 'rtl'; X.textAlign = 'right'; X.textBaseline = 'alphabetic';
+    X.save(); X.globalAlpha *= k * out(t, o); shadow(40, 14, 0.12); X.fillStyle = hexA(col('INK'), 0.07); rrp(b.x, b.y, b.w, b.h, 34); X.fill(); noShadow();
+    X.fillStyle = hexA(col('INK'), .85); X.font = font(800, 30); X.direction = 'rtl'; X.textAlign = 'right'; X.textBaseline = 'alphabetic';
     X.fillText(o.title || 'المونتاج', b.x + b.w - 40, b.y + 58);
     const tx0 = b.x + 150, tx1 = b.x + b.w - 40;
     ['موضع', 'حجم', 'دوران'].forEach((lab, r) => { const y = b.y + 100 + r * rh + rh / 2;
-      X.fillStyle = 'rgba(255,255,255,.5)'; X.font = font(700, 22); X.textAlign = 'right'; X.fillText(lab, b.x + 120, y + 8);
-      X.strokeStyle = 'rgba(255,255,255,.18)'; X.lineWidth = 2; X.beginPath(); X.moveTo(tx0, y); X.lineTo(tx1, y); X.stroke();
+      X.fillStyle = hexA(col('INK'), .5); X.font = font(700, 22); X.textAlign = 'right'; X.fillText(lab, b.x + 120, y + 8);
+      X.strokeStyle = hexA(col('INK'), .18); X.lineWidth = 2; X.beginPath(); X.moveTo(tx0, y); X.lineTo(tx1, y); X.stroke();
       for (let d = 0; d < 6; d++) { const kd = eBack(pr(t, o.s + 0.3 + r * 0.12 + d * 0.07, o.s + 0.6 + r * 0.12 + d * 0.07)); if (kd <= 0) continue;
         const px = lerp(tx0, tx1, ((d * 0.17 + r * 0.09) % 1)), s2 = 12 * cl(kd, 0, 1.2);
-        X.save(); X.translate(px, y); X.rotate(Math.PI / 4); X.fillStyle = '#E4FF6A'; X.fillRect(-s2 / 2, -s2 / 2, s2, s2); X.restore(); } });
+        X.save(); X.translate(px, y); X.rotate(Math.PI / 4); X.fillStyle = col('ACC'); X.fillRect(-s2 / 2, -s2 / 2, s2, s2); X.restore(); } });
     const ph = lerp(tx0, tx1, eo(pr(t, o.s + 0.6, o.s + (o.dur || 2.6))));      // رأس التشغيل
-    X.strokeStyle = '#FF5A4E'; X.lineWidth = 3; X.beginPath(); X.moveTo(ph, b.y + 88); X.lineTo(ph, b.y + 100 + rows * rh); X.stroke();
-    X.fillStyle = '#FF5A4E'; X.beginPath(); X.moveTo(ph - 9, b.y + 80); X.lineTo(ph + 9, b.y + 80); X.lineTo(ph, b.y + 94); X.fill();
+    X.strokeStyle = col('ACC'); X.lineWidth = 3; X.beginPath(); X.moveTo(ph, b.y + 88); X.lineTo(ph, b.y + 100 + rows * rh); X.stroke();
+    X.fillStyle = col('ACC'); X.beginPath(); X.moveTo(ph - 9, b.y + 80); X.lineTo(ph + 9, b.y + 80); X.lineTo(ph, b.y + 94); X.fill();
     steps.forEach((sTxt, j) => { const kj = pr(t, o.s + 0.6 + j * 0.6, o.s + 0.9 + j * 0.6); if (kj <= 0) return;
       const sw = (b.w - 80) / steps.length, x = b.x + b.w - 40 - (j + 1) * sw + 8, y = b.y + b.h - 92;
-      X.globalAlpha *= 1; X.fillStyle = 'rgba(255,255,255,' + (0.16 + 0.14 * kj) + ')'; rrp(x, y, sw - 16, 56, 16); X.fill();
-      X.fillStyle = '#fff'; X.font = font(800, 26); X.textAlign = 'center'; X.fillText(sTxt, x + (sw - 16) / 2, y + 37); });
+      X.globalAlpha *= 1; X.fillStyle = hexA(col('INK'), 0.08 + 0.1 * kj); rrp(x, y, sw - 16, 56, 16); X.fill();
+      X.fillStyle = col('INK'); X.font = font(800, 26); X.textAlign = 'center'; X.fillText(sTxt, x + (sw - 16) / 2, y + 37); });
     const ca = o.clickAt || o.s + 2.4, press = pr(t, ca, ca + 0.18), rel = pr(t, ca + 0.18, ca + 0.4), sc = 1 - 0.12 * press + 0.12 * rel;
-    X.save(); X.translate(b.x + 110, b.y + 48); X.scale(sc, sc); X.fillStyle = t >= ca ? '#E4FF6A' : '#fff'; rrp(-70, -24, 140, 48, 24); X.fill();
-    X.fillStyle = '#1F1F1D'; X.font = font(900, 24); X.textAlign = 'center'; X.fillText('رندر', 0, 9); X.restore();
+    X.save(); X.translate(b.x + 110, b.y + 48); X.scale(sc, sc); X.fillStyle = t >= ca ? col('ACC') : hexA(col('INK'), .9); rrp(-70, -24, 140, 48, 24); X.fill();
+    X.fillStyle = col('BG'); X.font = font(900, 24); X.textAlign = 'center'; X.fillText('رندر', 0, 9); X.restore();
     X.restore();
   };
 
@@ -245,11 +251,11 @@
       const cx = b.x + cI * cw + cw / 2, cy = b.y + rI * ch + ch / 2, sc = cl(k, 0, 1.1) * (1 + 0.35 * hk);
       X.save(); X.translate(cx, cy); X.scale(sc, sc);
       X.globalAlpha *= isHot && hk > 0 ? 1 : (t > hotAt && hN ? 0.35 : 1);
-      X.fillStyle = hk > 0 ? (o.hotColor || '#E5484D') : (o.color || col('INK'));
+      X.fillStyle = hk > 0 ? (o.hotColor || col('ACC')) : (o.color || col('INK'));
       X.beginPath(); X.arc(0, -r * 0.55, r * 0.42, 0, 7); X.fill();                      // راس
       X.beginPath(); X.roundRect(-r * 0.62, -r * 0.05, r * 1.24, r * 1.05, [r * 0.62, r * 0.62, r * 0.18, r * 0.18]); X.fill();   // جسم
       X.restore();
-      if (hk > 0 && hk < 1) { X.save(); X.globalAlpha = (1 - hk) * 0.6; X.strokeStyle = o.hotColor || '#E5484D'; X.lineWidth = 4; X.beginPath(); X.arc(cx, cy, r * (1 + hk * 1.6), 0, 7); X.stroke(); X.restore(); }
+      if (hk > 0 && hk < 1) { X.save(); X.globalAlpha = (1 - hk) * 0.6; X.strokeStyle = o.hotColor || col('ACC'); X.lineWidth = 4; X.beginPath(); X.arc(cx, cy, r * (1 + hk * 1.6), 0, 7); X.stroke(); X.restore(); }
     }
     X.restore();
   };

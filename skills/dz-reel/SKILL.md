@@ -8,8 +8,15 @@ description: مونتاج فيديو هدرة للكاميرا (talking head) إ
 > 2. **French/English terms** stay in Latin letters with an Arabic gloss in quotes after them — «هادي حاجة normal "عادية"» — via `"gloss"` in `fixes.json` (step 5). Every Latin term gets one.
 > 3. **Environment:** start every shell command with `source "${CLAUDE_SKILL_DIR}/../../setup/env.sh"` (Python 3.12 env, ffmpeg-full, models in `~/.wailzenz-video-dz`). First time on a machine? Run `bash "${CLAUDE_SKILL_DIR}/../../setup/setup-mac.sh"` (ask the user first — it downloads ~4 GB). Never `pip install` into the system Python.
 > 4. **Transcription** (step 4) uses `scripts/02a_transcribe_dz.py`: whisper.cpp large-v3 on the Mac GPU, or `--engine hadra` (Algerian model) / `--engine whisper` (any OS). Never `python3 -m whisper --model medium`.
-> 5. **Close-up framing:** if the chin sits below y ≈ 1250 (caption box would touch the face), set `theme.json` → `"capY": 450` (+ `"capYFrom"` after an opening hook) — the box moves above the head. Check `08_safe_check.js` afterwards.
-> 6. **Updates** only through the plugin manager (`00_setup.sh` prints the command). Never overwrite the skill's files.
+> 5. **Updates** only through the plugin manager (`00_setup.sh` prints the command). Never overwrite the skill's files.
+>
+> **🎬 House style — every video, no exceptions:**
+> 6. **Full step 7, always.** Split screens, explainer panels, moves from the bank, transitions, at least one depth moment (behind the head, «الخلاصة»-style video-in-text…), SFX, end card. A reel with only captions over the face is never acceptable.
+> 7. **Never duplicate the caption.** The panel must not show the words being captioned at that moment — no kinetic text of the current sentence, no "big caption" up top. Panels are *visuals*: icons, diagrams, UI mockups (terminal, timeline), metaphors, comparison boards, facts from `facts.md`. Terminal commands, timeline labels and card titles must not repeat the caption either. If a sentence truly needs its words big on screen, give it `nocap:true` instead.
+> 8. **Cut carefully.** `01_cut_plan.py` only cuts pauses ≥ 0.55 s, measures silence against the clip's own noise floor, keeps more room after a word than before it, and ends with a self-check — any «⚠️» means fix the cut first. Every cut starts and ends in silence. A hesitation («الـ…», «اممم») goes only as a whole, silence on both sides; a restart («اللي تحتاج… تحتاج») keeps the second take. After the final render run `19_seam_check.py <work> <final.mp4>` and fix any repeated or broken word (it hears English terms in Arabic mode badly — re-check those with `-l en`).
+> 9. **Alternate the panel position.** Mix `R_DOWN` (animation on top, face below) with `R_UP` (face on top, animation at the bottom — `panelIn` moves there by itself), plus `R_LOWER` (big panel, small face) and `R_FULL` moments. Never more than two explainer scenes in a row in the same position.
+> 10. **Tie every scene to word times** (`caps.json` words), never fixed seconds — a re-cut must not break the scenes.
+> 11. **Close-up framing:** the face card crops from `studio.json` → `cardTop`; if the mouth falls below y ≈ 1600 (Instagram's caption zone) raise it (≈ 0.3). `R_UP` shows a little more above the head automatically.
 
 # ريل من فيديو كلام — بلا برنامج مونتاج
 
