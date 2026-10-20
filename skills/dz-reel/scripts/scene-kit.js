@@ -169,6 +169,7 @@ const KIT = (() => {
   }
 
   const cues = { thud: [], whoosh_up: [], whoosh_down: [], pop: [], tap: [], soft: [], riser: [] }, preview = [];
+  const used = new Set(), icons = new Set(), BUILTIN = new Set(SCENE_LIST.map(x => x[0]));   /* engine scenes present before scenes.js */   /* what this video uses — reel.py compares it with the last videos (rule 15) */
   const SPLIT = m => m === R_UP || m === R_DOWN || m === R_LOWER || (m && m.up);
   function reel(list) {
     MV.ready(() => {
@@ -179,10 +180,14 @@ const KIT = (() => {
         SCENES.push(sc.nocap ? { s, e, m, nocap: true } : { s, e, m });
         const end = Math.min(e, VEND || e), ovl = m === R_OVT || m === R_OVB || m === R_FULL;
         if (i && prev !== m && (SPLIT(m) || SPLIT(prev)) && !sc.full) cues.whoosh_down.push(+s.toFixed(2));
+        if (sc.snap != null) used.add('snap');
         if (sc.snap != null) { const o = typeof sc.snap === 'object' ? sc.snap : { at: sc.snap }, a = at(o.at) - 0.05, b = at(o.back, a + 0.6);
           const f = t => { if (t < a || t > b + 0.5) return; FX.snapZoom(MV, t, { s: a, to: o.to || 1.16, focus: [540, 800], back: b, draw: Y => MV.video(Y) }); };
           f.layer = 'video'; SCENE_LIST.push(['kitSnap' + i, f, 'video']); cues.thud.push(+(a + 0.01).toFixed(2)); preview.push(+(a + 0.14).toFixed(2)); }
         if (sc.panel) { const P = { glass: ovl, ...sc.panel }, p0 = at(P.from, s), p1 = Math.min(at(P.to, e), e);
+          for (const k of ['icons', 'progress', 'compare', 'pill']) if (P[k]) used.add(k === 'icons' ? 'icon flow' : k === 'compare' ? 'compare board' : k);
+          if (P.glass) used.add('glass band');
+          (P.icons || []).forEach(x => icons.add(x[0])); if (P.compare) [P.compare.a, P.compare.b].forEach(c => c && icons.add(c.icon || 'person'));
           SCENE_LIST.push(['kitPanel' + i, t => { if (t < p0 || t > p1) return; panelIn(t, p0, p1, () => panel(P, t, p0, p1)); }]);
           cues.soft.push([+(p0 + TR - 0.08).toFixed(2), 0.04]);
           if (P.compare) { for (const c of [P.compare.a, P.compare.b]) { if (c && c.plus) cues.pop.push(+at(c.plus).toFixed(2)); if (c && c.minus) cues.tap.push(+at(c.minus).toFixed(2)); } }
@@ -190,6 +195,8 @@ const KIT = (() => {
           const late = Math.max(...(P.icons || []).map(x => at(x[1], p0)), ...([P.compare && P.compare.a && P.compare.a.plus, P.compare && P.compare.b && P.compare.b.minus].filter(Boolean).map(at)), p0 + 0.6);
           preview.push(+Math.min(p1 - 0.15, late + 0.4).toFixed(2)); }
         if (sc.full) { const F = sc.full, inF = sc.enter === 'flip', outF = sc.exit === 'flip';
+          if (F.chart) { used.add('growth chart'); F.chart.forEach(c => c.icon && icons.add(c.icon)); }
+          if (F.icons) { used.add('big icons'); F.icons.forEach(x => icons.add(x[0])); } if (inF || outF) used.add('flip');
           SCENE_LIST.push(['kitFull' + i, t => { if (t < s || t > e + (outF ? 0.62 : 0)) return;
             if (inF && t < s + 0.7) FX.flip(MV, t, { s, dur: 0.7, A: Y => MV.video(Y), B: Y => full(F, Y, t, s) });
             else if (t < e) full(F, X, t, s);
@@ -209,7 +216,8 @@ const KIT = (() => {
     const out = {}; for (const k in cues) if (cues[k].length) out[k] = cues[k];
     let p = [...new Set(preview)].filter(t => t > 0 && t < (VEND || 1e9)).sort((a, b) => a - b);
     while (p.length > 6) { let bi = 1, bd = 1e9; for (let i = 1; i < p.length; i++) if (p[i] - p[i - 1] < bd) { bd = p[i] - p[i - 1]; bi = i; } p.splice(bi, 1); }
-    return { sfx: out, preview: p };
+    const custom = SCENE_LIST.map(x => x[0]).filter(n => !/^kit/.test(n) && !BUILTIN.has(n) && n !== 'hookZoom').map(n => 'custom:' + n);   // your own MV.scene drawings
+    return { sfx: out, preview: p, blocks: [...used, ...custom], icons: [...icons] };
   }
   /* KIT.cue('whoosh_up', 'tool') — a sound for a moment you drew yourself (call it inside MV.ready) */
   function cue(kind, ref, g) { const t = +at(ref).toFixed(2); (cues[kind] = cues[kind] || []).push(kind === 'soft' ? [t, g || 0.04] : kind === 'riser' ? [t, g || 1.1] : t); }

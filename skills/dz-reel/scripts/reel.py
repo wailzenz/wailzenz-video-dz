@@ -144,6 +144,32 @@ def cut(args):
     print(f"→ write <work>/scenes.js with KIT.reel([...]) (pattern: {ex}), then: reel.py preview")
 
 
+# ── variety (house-style rule 15: every animation comes from its sentence, no two videos alike) ─────────────────
+HIST = HOME / "kit-history.json"
+GENERIC = {"snap", "pill"}          # the first-second motion and a label say little about the design
+
+
+def variety(W, kit, name):
+    msgs = []
+    if not (W / "scene-plan.md").exists():
+        msgs.append("no scene-plan.md — write one line per scene (words · meaning · visual · tool) before the scenes (rule 15)")
+    hist = json.loads(HIST.read_text(encoding="utf-8")) if HIST.exists() else []
+    b, ic = set(kit.get("blocks", [])) - GENERIC, set(kit.get("icons", []))
+    for h in [h for h in hist if h.get("name") != name][-3:]:
+        sb, si = b & (set(h.get("blocks", [])) - GENERIC), ic & set(h.get("icons", []))
+        if len(sb) >= 2 or (b and len(sb) == len(b)): msgs.append(f"same blocks as {h['name']}: {', '.join(sorted(sb))}")
+        if len(si) >= 3: msgs.append(f"same icons as {h['name']}: {', '.join(sorted(si))}")
+    for m in msgs: print("⚠️ variety: " + m)
+    if len(msgs) > 1 or any(m.startswith("same") for m in msgs):
+        print("   → check every scene against its sentence: does this visual show what is said here? If not, pick another (35_moves.py plan, a custom drawing)")
+
+
+def remember(kit, name):
+    hist = json.loads(HIST.read_text(encoding="utf-8")) if HIST.exists() else []
+    hist = [h for h in hist if h.get("name") != name] + [{"name": name, "date": time.strftime("%Y-%m-%d"), "blocks": kit.get("blocks", []), "icons": kit.get("icons", [])}]
+    HIST.write_text(json.dumps(hist[-30:], ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 # ── compose ────────────────────────────────────────────────────────────────────────────────────────
 def compose(W):
     if not (W / "scenes.js").exists(): die("no scenes.js — write KIT.reel([...]) first")
@@ -165,9 +191,10 @@ def preview(args):
     _, out = run(W, "preview", ["node", SC / "04_render_frames.js", W, "preview", *(times or ["auto"])])
     errs = [l for l in out.splitlines() if "مشهد متخطّى" in l or "KIT:" in l or "Error" in l]
     for l in errs[:5]: print("⚠️ " + l.strip())
+    k = W / "kit_cues.json"; kit = json.loads(k.read_text()) if k.exists() else {}
+    variety(W, kit, state(W).get("name") or W.name)
     if not times:
-        k = W / "kit_cues.json"
-        times = [f"{t:.2f}" for t in json.loads(k.read_text())["preview"]] if k.exists() else []
+        times = [f"{t:.2f}" for t in kit.get("preview", [])]
     if not times: times = [f"{float(f.stem[1:]):.2f}" for f in sorted(p.glob("t*.jpg"))]
     run(W, "sheet", ["bash", SC / "07_contact_sheet.sh", W, W / "sheet.jpg", *times])
     print(f"🖼️  {W / 'sheet.jpg'}  ({len(times)} frames: {' '.join(times)}) — read this one image, fix, repeat; then: reel.py final")
@@ -246,6 +273,7 @@ def final(args):
     if cover: files.append((W / "cover.jpg", f"{name}_cover.jpg"))
     for a, b in files:
         if a.exists(): shutil.copy2(a, exp / b)
+    if kc.exists(): remember(json.loads(kc.read_text()), name)
     mb = deliver.stat().st_size / 1e6
     print(f"🎬 {name}: {D:.2f}s · {mb:.1f} MB · {('%s LUFS, peak %s' % loud.groups()) if loud else 'loudness ?'} · {done} · {time.time() - t0:.0f}s")
     print(("✅ safe zones · hook · captions under the chin" if rc == 0 else "❌ safe check failed — fix before delivering") + "".join("\n   " + l for l in safe if not l.startswith("ℹ️  ما فيه فشل")))

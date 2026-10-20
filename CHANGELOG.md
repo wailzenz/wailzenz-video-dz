@@ -11,6 +11,12 @@ Fixes from the first video made with the fast path.
 - The render fingerprint ignores the pipeline's own files, so `final` doesn't redraw every frame when nothing changed.
 - Fast path: the behind-the-head words are Arabic-only (kashida); English/French reels use live video inside a big word instead.
 
+### Added — animations that fit the script (house-style rule 15)
+- Every animation must come from its sentence, never a template. Before the scenes, Claude writes `<work>/scene-plan.md` (words ·
+  meaning · visual · tool) and runs the moves board again (`35_moves.py plan`) — the kit is a toolbox, not a recipe.
+- The kit reports which blocks and icons a video uses; `reel.py preview` warns when they repeat the last three videos (history in
+  `$WVD_HOME/kit-history.json`) or when there is no scene plan.
+
 ## 1.2.0 — 2026-10-20
 
 ### Added — a faster pipeline (fewer tokens, less time)

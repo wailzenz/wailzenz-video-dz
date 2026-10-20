@@ -1,4 +1,6 @@
-/* A whole reel's scenes with the scene kit (wailzenz-video-dz) — the English test reel, 10 s:
+/* ⚠️ SYNTAX example, not a design to copy (house-style rule 15): plan every visual from YOUR script's sentences first
+   (<work>/scene-plan.md), then pick the tool. Reusing this compare board / chart / flip on another video is exactly what not to do.
+   A whole reel's scenes with the scene kit (wailzenz-video-dz) — the English test reel, 10 s:
    «Every hour you spend learning AI becomes an hour someone else doesn't have.
     The future belongs to people who compound knowledge faster than others compound money.»
    Times are spoken words ('hour#1' = the 2nd «hour», '^1' = sentence 1 starts, '+0.2' / '-0.1' offsets).
