@@ -127,7 +127,7 @@ async function movesInject(p){ if(await p.evaluate(()=>!!(window.FX&&window.MV))
        فأي استئناف بعد طيحة يكمّل الناقص بس. نافذة range ما تمسح شي (تعدّل مشهد وتجمّع) وتحدّث البصمة. */
     const crypto=require('crypto'), FPF=W+'out/.design.sha1';
     const fpNow=(()=>{ const h=crypto.createHash('sha1');
-      for(const f of fs.readdirSync(W).sort()) if(/\.(html|js|json)$/.test(f)&&!['shots.json','sfx.json','fixes.json','a.json','words.json','safe.json'].includes(f)) h.update(f).update(fs.readFileSync(W+f));
+      for(const f of fs.readdirSync(W).sort()) if(/\.(html|js|json)$/.test(f)&&!['shots.json','sfx.json','fixes.json','a.json','words.json','safe.json','kit_cues.json','reel.json','fa.json','a_unmerged.json'].includes(f)) h.update(f).update(fs.readFileSync(W+f));
       const ext=(fs.readFileSync(W+'compose.html','utf8').match(/src="(\.\.\/[^"]+\.js)"/g)||[]).map(m=>m.slice(5,-1));
       for(const e of ext){ try{ h.update(e).update(fs.readFileSync(W+e)); }catch(_){} }
       return h.digest('hex'); })();

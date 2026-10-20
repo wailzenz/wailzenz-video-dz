@@ -185,6 +185,17 @@ def onset_starts(wav):
     return on
 
 
+def audio_lag(ref, test, secs=20):
+    """Offset of test against ref (seconds), from their loudness envelopes."""
+    import numpy as np, wave
+    def env(f):
+        w = wave.open(str(f)); sr = w.getframerate(); x = np.frombuffer(w.readframes(min(w.getnframes(), sr * secs)), dtype=np.int16).astype(float)
+        hop = sr // 1000; n = len(x) // hop; e = np.abs(x[:n * hop]).reshape(n, hop).mean(1); return (e - e.mean()) / (e.std() + 1e-9)
+    a, b = env(ref), env(test); n = min(len(a), len(b)); a, b = a[:n], b[:n]
+    lags = range(-200, 201); cc = [float(np.dot(a[max(0, -k):n - max(0, k)], b[max(0, k):n - max(0, -k)])) for k in lags]
+    return lags[int(np.argmax(cc))] / 1000.0
+
+
 def final(args):
     W = Path(args[0]).resolve(); st = state(W); lang = st.get("lang", "ar")
     name = opt(args, "--name", st.get("name") or W.name); state(W, name=name)
@@ -203,20 +214,20 @@ def final(args):
     run(W, "srt", ["python3", SC / "09_srt.py", W, "ad-master"])
     rc, out = run(W, "safe_check", ["node", SC / "08_safe_check.js", W, "--shot"], ok=(0, 3))
     safe = [l.strip() for l in out.splitlines() if l.strip().startswith(("❌", "ℹ️", "⚠️"))]
-    # sync: sentence starts heard in the final vs caps.json
+    # sync, without a transcription: (1) the final's audio vs the cut voice track, (2) each caption that starts a sentence after a pause
+    #     vs the voice onset in the cut audio (whisper's segments don't follow our sentences, so they gave false alarms)
     run(W, "sync_audio", ["ffmpeg", "-v", "error", "-y", "-i", W / "ad-final.mp4", "-vn", "-ac", "1", "-ar", "16000", W / "fa.wav"])
-    model = Path(os.environ.get("WHISPER_CPP_MODELS", HOME / "models")) / "ggml-large-v3-turbo-q5_0.bin"
+    run(W, "cut_audio", ["ffmpeg", "-v", "error", "-y", "-i", W / "cutz.mp4", "-vn", "-ac", "1", "-ar", "16000", W / "ca.wav"])
     sync = []
-    if model.exists() and shutil.which("whisper-cli"):
-        run(W, "sync", ["whisper-cli", "-m", model, "-l", lang, "-f", W / "fa.wav", "-oj", "-of", W / "fa", "-np"])
-        heard = [s["offsets"]["from"] / 1000 for s in json.loads((W / "fa.json").read_text())["transcription"] if s["text"].strip()]
-        run(W, "cut_audio", ["ffmpeg", "-v", "error", "-y", "-i", W / "cutz.mp4", "-vn", "-ac", "1", "-ar", "16000", W / "ca.wav"])
-        on = onset_starts(W / "ca.wav")                                     # voice only, on the cut timeline
-        caps = json.loads((W / "caps.json").read_text(encoding="utf-8"))["cards"]
-        for i, c in enumerate(caps):
-            w0 = c["w"][0]["s"]; h = min(heard, key=lambda x: abs(x - w0)) if heard else w0
-            if h == 0.0 and on: h = min(on, key=lambda x: abs(x - w0))          # whisper's first segment always says 0.00
-            if abs(h - w0) >= 0.1: sync.append(f"sentence {i} «{c['w'][0]['t']}» at {w0:.2f}s, heard {h:.2f}s")
+    lag = audio_lag(W / "ca.wav", W / "fa.wav")
+    if abs(lag) > 0.04: sync.append(f"final audio is {lag * 1000:+.0f} ms off the cut")
+    on = onset_starts(W / "ca.wav"); prev_end = -1.0
+    for i, c in enumerate(json.loads((W / "caps.json").read_text(encoding="utf-8"))["cards"]):
+        w0 = c["w"][0]["s"]
+        if (i == 0 or w0 - prev_end > 0.25) and on:
+            h = min(on, key=lambda x: abs(x - w0))
+            if abs(h - w0) > 0.12 and abs(h - w0) < 0.6: sync.append(f"sentence {i} «{c['w'][0]['t']}» at {w0:.2f}s, voice at {h:.2f}s")
+        prev_end = max(w["e"] for w in c["w"])
     keep = json.loads((W / "cut.json").read_text())["keep"]
     seam = ""
     if len(keep) > 1:
@@ -238,7 +249,7 @@ def final(args):
     mb = deliver.stat().st_size / 1e6
     print(f"🎬 {name}: {D:.2f}s · {mb:.1f} MB · {('%s LUFS, peak %s' % loud.groups()) if loud else 'loudness ?'} · {done} · {time.time() - t0:.0f}s")
     print(("✅ safe zones · hook · captions under the chin" if rc == 0 else "❌ safe check failed — fix before delivering") + "".join("\n   " + l for l in safe if not l.startswith("ℹ️  ما فيه فشل")))
-    print("✅ sync (sentence starts < 0.1 s)" if not sync else "⚠️ sync: " + " · ".join(sync))
+    print(f"✅ sync (audio {lag * 1000:+.0f} ms · sentence starts on the voice)" if not sync else "⚠️ sync: " + " · ".join(sync))
     if seam: print(seam)
     print(f"📦 {exp}: " + " · ".join(b for a, b in files if a.exists()) + f"\n🖼️  {W / 'final_sheet.jpg'} — look once, then deliver (nothing is posted anywhere)")
     if rc != 0: sys.exit(3)

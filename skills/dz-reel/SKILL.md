@@ -38,7 +38,10 @@ $R prep <video> <work> --lang ar      # or --lang en / fr · copy, dropped frame
 4. **Write `<work>/scenes.js` as `KIT.reel([...])`** — about 15 lines, pattern `examples/scenes.kit.example.js`, options at the top of
    `scripts/scene-kit.js`. House style: a different layout every scene (`R_OVT`/`R_OVB` bands, `R_UP`/`R_DOWN` splits, `R_OFF` full chart,
    `R_FULL`), panels = icons / pill / bars (never the caption words), a snap zoom in the first second, never a frozen face.
-   Depth moment: words behind the head for the hook — `node scripts/11_behind_text.js <work> stack 1:1-3` (sentence 1, words 1–3; the caption hides meanwhile).
+   Depth moment — Arabic: words behind the head for the hook, `node scripts/11_behind_text.js <work> stack 1:1-3` (sentence 1, words 1–3;
+   kashida-based, so Arabic only). English/French: live video inside a big word — an `R_FULL` scene with `nocap: true`, then
+   `MV.ready(() => { const s = KIT.at('tool'), out = KIT.at('Most-0.05'); KIT.cue('whoosh_up', 'tool');
+   MV.scene('word', t => { if (t >= s && t < out) FX.videoText(MV, t, { text: 'CHANGED', s, out, video: Y => MV.video(Y) }); }); });`
 5. `$R preview <work>` → read `sheet.jpg` (one image). Fix `scenes.js`, repeat only if something is wrong.
 6. `$R final <work> --name <name> --cover "Line|*line*"` → render, the kit's sound cues, −14 LUFS, SRT, safe-zone + chin + sync + seam
    checks, cover on the first frame, export to `exports/`. Read `final_sheet.jpg` once. ❌ → fix and run `final` again (only changed

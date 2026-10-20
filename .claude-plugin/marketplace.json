@@ -10,7 +10,7 @@
     {
       "name": "wailzenz-video-dz",
       "description": "Talking-head reels, podcasts, montages, motion explainers and covers in Algerian Darija — word-by-word Arabic captions with Arabic glosses for French/English terms.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": { "name": "wailzenz" },
       "source": "./",
       "category": "media",

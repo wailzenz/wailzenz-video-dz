@@ -125,7 +125,7 @@ const KIT = (() => {
     if (P.compare) {
       const S = 44, g = 10, y0 = 368 - S / 2, side = (c, px, xb, colP, colB, d) => {
         X.save(); X.translate(px, 368); X.globalAlpha *= ease(pr(t, p0 + d, p0 + d + 0.3)); icon(c.icon || 'person', 92, t, colP); X.restore();
-        const n = c.n || 4; for (let i = 0; i < n; i++) block(xb + i * (S + g), y0, S, pr(t, p0 + d + 0.1 + i * 0.06, p0 + d + 0.35 + i * 0.06), colB);
+        const n = c.n ?? 4;   /* n: 0 = no grey blocks */ for (let i = 0; i < n; i++) block(xb + i * (S + g), y0, S, pr(t, p0 + d + 0.1 + i * 0.06, p0 + d + 0.35 + i * 0.06), colB);
         const gx = xb + n * (S + g);
         if (c.plus) block(gx, y0, S, pr(t, at(c.plus), at(c.plus) + 0.3), ACC);
         if (c.minus) { const k = pr(t, at(c.minus), at(c.minus) + 0.3); block(gx + 3, y0 + 3, S - 6, k, null, true);
@@ -211,6 +211,8 @@ const KIT = (() => {
     while (p.length > 6) { let bi = 1, bd = 1e9; for (let i = 1; i < p.length; i++) if (p[i] - p[i - 1] < bd) { bd = p[i] - p[i - 1]; bi = i; } p.splice(bi, 1); }
     return { sfx: out, preview: p };
   }
-  return { reel, at, ICON, export: exportCues };
+  /* KIT.cue('whoosh_up', 'tool') — a sound for a moment you drew yourself (call it inside MV.ready) */
+  function cue(kind, ref, g) { const t = +at(ref).toFixed(2); (cues[kind] = cues[kind] || []).push(kind === 'soft' ? [t, g || 0.04] : kind === 'riser' ? [t, g || 1.1] : t); }
+  return { reel, at, cue, ICON, export: exportCues };
 })();
 window.KIT = KIT;

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.1 — 2026-10-20
+
+Fixes from the first video made with the fast path.
+
+- Scene kit: `n: 0` on a compare side now means no grey blocks (it fell back to 4). New `KIT.cue(kind, word)` adds a sound for a
+  moment you drew yourself.
+- `reel.py final`: the sync check no longer compares with whisper's segments (they don't follow our sentences and gave false
+  alarms). It now measures the final audio against the cut voice track, and each sentence start against the voice onset.
+- The render fingerprint ignores the pipeline's own files, so `final` doesn't redraw every frame when nothing changed.
+- Fast path: the behind-the-head words are Arabic-only (kashida); English/French reels use live video inside a big word instead.
+
 ## 1.2.0 — 2026-10-20
 
 ### Added — a faster pipeline (fewer tokens, less time)
