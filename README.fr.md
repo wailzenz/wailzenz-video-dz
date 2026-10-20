@@ -20,6 +20,7 @@ silences et erreurs coupés, sous-titres arabes mot par mot, motion design, effe
 | 🪝 **Hook à l'écran** | Une phrase forte dans les deux premières secondes, vérifiée en darija algérienne |
 | 🎬 **Motion design** | 100 animations prêtes, texte qui passe derrière votre tête, cartes, compteurs… |
 | 🔀 **Écran partagé qui alterne** | L'animation en haut et votre visage en bas, puis l'inverse — la mise en page change sans cesse |
+| 🪟 **Bandeaux en surimpression** | Pas toujours 50/50 : un bandeau fin en haut ou en bas, par-dessus votre vidéo plein écran, sur une carte transparente ou directement sur l'image |
 | 🧠 **Des visuels, pas un 2e sous-titre** | Les panneaux ne répètent jamais les mots du sous-titre : icônes, maquettes (terminal, timeline), tableaux comparatifs |
 | 🔊 **Audio** | Nettoyage de la voix, effets sonores libres de droits, volume à −14 LUFS |
 | 🎙️ **Plus que des reels** | Podcast → reels, montage sur le rythme, vidéos motion sans tournage, miniatures |
@@ -60,9 +61,11 @@ Mettez la vidéo dans un dossier et dites à Claude :
 
 Basé sur **[majed-video](https://github.com/majedphotos/video-ad-editor)** de **Majed Alzaabi** (MIT) — le moteur, les animations et la méthode de montage sont son travail ; merci à lui.
 Ce plugin ajoute la couche algérienne : transcription en darija, règles de hook algériennes, traduction arabe des termes en lettres latines, et correction de l'ordre des mots français/anglais dans les sous-titres.
-Il ajoute aussi un style maison : écran partagé qui alterne haut/bas, panneaux qui ne répètent pas le sous-titre, découpage soigné. Liste complète : [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Il ajoute aussi un style maison : écran partagé qui alterne haut/bas, bandeaux en surimpression, panneaux qui ne répètent pas le sous-titre, découpage soigné. Liste complète : [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ![](docs/img/split-screens.png)
+
+![](docs/img/overlay-band.png)
 
 ## Licence
 

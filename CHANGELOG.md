@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.0 — 2026-10-20
+
+### Added — overlay bands (not always a 50/50 split)
+- **`R_OVT` / `R_OVB` layouts**: the face keeps the whole frame and the panel sits in a band about 20% of the height — on top
+  (y ≈ 260–480, under Instagram's top bar) or at the bottom (y ≈ 1230–1410, above Instagram's caption zone). `panelIn` places it by
+  itself. With `R_OVB` the caption moves up above the band; with `R_OVT` it never rises into the band (also when `theme.json` sets `capY`).
+- **`glass(x, y, w, h, r, a)`**: a semi-transparent card in the theme colour, so a panel doesn't need a black background.
+  **`dsh()`**: a dark soft shadow for icons drawn straight on the video.
+- **House-style rule 12** in `dz-reel`: mix the bands with the split screens; bands for light moments (step counter, icons,
+  progress), split screens for heavy explainers; `R_OVB` only with room under the chin — on a close-up use `R_OVT`.
+- Examples `sStep` (top band: glass card, step pill, icons, segmented progress bar) and `sFlow` (bottom band, transparent) in
+  `examples/scenes.example.js`. Docs: layout table, `docs/img/overlay-band.png`.
+
+### Fixed
+- Documented that numbers or Latin text inside a panel need `T(…, 'ltr')` — the canvas is right-to-left, so «01 / 03» came out as «03 / 01».
+
 ## 1.0.0 — 2026-10-20
 
 First public release. Based on **majed-video 6.0.1** by Majed Alzaabi (MIT) — the engine, the 100 motion moves and the editing

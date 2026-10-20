@@ -17,14 +17,21 @@ You don't call them by name: say what you want and Claude picks the right one.
 1. **Full scene design every time** — split screens, explainer panels, moves, transitions, a depth moment, SFX, end card.
 2. **Never duplicate the caption** — panels are visuals (icons, mockups, boards); they never show the words being captioned. Words big on screen → `nocap:true` for that sentence.
 3. **Careful cutting** — only real pauses (≥ 0.55 s, measured against the clip's own noise floor), every cut in silence, hesitations removed whole or not at all, restarts keep the second take; `01_cut_plan.py` self-checks and `19_seam_check.py` re-listens after the render.
-4. **Alternating layouts** — `R_DOWN` (animation top, face bottom) ↔ `R_UP` (face top, animation bottom) ↔ `R_LOWER` (big panel, small face) ↔ `R_FULL`.
+4. **Alternating layouts** — `R_DOWN` (animation top, face bottom) ↔ `R_UP` (face top, animation bottom) ↔ the overlay bands `R_OVT` / `R_OVB` ↔ `R_LOWER` (big panel, small face) ↔ `R_FULL`.
+5. **Not always a 50/50 split** — a panel can be a band (about 20% of the height) over the full-screen video, at the top or the bottom, with no black background: drawn straight on the video, or on a semi-transparent `glass()` card. Bands are for light moments (a step counter, icons, a progress bar); split screens are for heavy explainers.
 
 | Layout | Face | Panel | Caption |
 |---|---|---|---|
 | `R_FULL` | whole frame | — (or text over the video) | bottom |
 | `R_DOWN` | lower card | top (`panelIn`) | between them |
 | `R_UP` | top 960 px | bottom (`panelIn` moves there by itself) | under the face |
+| `R_OVT` | whole frame | band on top, y ≈ 260–480, over the video | bottom (as usual) |
+| `R_OVB` | whole frame | band at the bottom, y ≈ 1230–1410, over the video | above the band (needs room under the chin — on a close-up use `R_OVT`) |
 | `R_LOWER` | small card at the bottom | big area on top | above the face card |
+
+![A top overlay band: a semi-transparent card with a step pill, icons and a progress bar, over the full-screen video](img/overlay-band.png)
+
+Overlay helpers in `compose.html`: `glass(x, y, w, h, r, a)` draws a semi-transparent card in the theme colour (`a` ≈ 0.5–0.6); `dsh()` sets a dark soft shadow for icons drawn straight on the video; numbers or Latin text inside a panel go through `T(text, x, y, font, colour, 'center', 'ltr')` so «01 / 03» doesn't come out reversed. Patterns: `sStep` and `sFlow` in the example below.
 
 See [`examples/scenes.example.js`](../examples/scenes.example.js) for a full reel's scenes, tied to word times.
 

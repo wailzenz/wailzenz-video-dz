@@ -1,6 +1,6 @@
 {
   "name": "wailzenz-video-dz",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Algerian video editing for Claude Code — turn talking-head videos into ready-to-post 9:16 reels in Darija: cut silences and mistakes, word-by-word Arabic captions (French/English terms kept in Latin with an Arabic gloss), motion graphics, sound effects, podcasts, montages and covers. Runs on your Mac.",
   "author": {
     "name": "wailzenz",

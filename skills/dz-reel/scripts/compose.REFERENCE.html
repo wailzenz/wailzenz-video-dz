@@ -91,6 +91,10 @@ const pr=(t,a,b)=>cl((t-a)/(b-a),0,1);
 function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);X.beginPath();X.moveTo(x+r,y);X.arcTo(x+w,y,x+w,y+h,r);X.arcTo(x+w,y+h,x,y+h,r);X.arcTo(x,y+h,x,y,r);X.arcTo(x,y,x+w,y,r);X.closePath();}
 function sh(b,y,a){X.shadowColor=cINK(a);X.shadowBlur=b;X.shadowOffsetY=y;}
 function nsh(){X.shadowColor='transparent';X.shadowBlur=0;X.shadowOffsetY=0;}
+/* wailzenz-video-dz: translucent «glass» card for overlays on the live video (R_FULL / R_OVT / R_OVB) — a = opacity of the theme bg */
+/* dsh(a) = dark soft shadow — contrast for icons drawn straight on the live video (sh() glows in the ink colour) */
+function dsh(a){X.shadowColor=cBG(a==null?0.7:a);X.shadowBlur=24;X.shadowOffsetY=4;}
+function glass(x,y,w,h,r,a){X.save();X.fillStyle=cBG(a==null?0.55:a);rr(x,y,w,h,r);X.fill();X.strokeStyle=cINK(0.12);X.lineWidth=2;rr(x,y,w,h,r);X.stroke();X.restore();}
 function card(x,y,w,h,r,al){X.save();X.globalAlpha*=(al===undefined?1:al);sh(44,18,0.20);X.fillStyle=cBG(0.97);rr(x,y,w,h,r);X.fill();nsh();X.strokeStyle=cINK(0.09);X.lineWidth=2.5;rr(x,y,w,h,r);X.stroke();X.restore();}
 function T(s,x,y,f,c,al,dir){X.save();X.font=f;X.fillStyle=c;X.textAlign=al||'center';X.textBaseline='middle';if(dir)X.direction=dir;X.fillText(s,x,y);X.restore();}
 /* ---------- video staging ---------- */
@@ -108,6 +112,13 @@ const R_DOWN={x:214,y:760,w:652,h:1160,r:40};
    960 px, the caption right under it, and the panel (panelIn) at the bottom, above Instagram's caption zone (y < 1500). */
 const R_UP={x:0,y:0,w:1080,h:960,r:0,up:true};
 const PANEL_LOW_Y=1385;   /* centre of the bottom panel; scale 1.0 there so it stays left of the like/comment column (x < 950) */
+/* wailzenz-video-dz (2026-10-20, «not always 50/50 — top or bottom 20%, transparent»): overlays on the full-screen video.
+   The face keeps the whole frame; panelIn draws in a ~20% band at the top (R_OVT) or bottom (R_OVB) straight over the live
+   video — no black panel. Use glass() behind text that needs contrast. R_OVB moves the caption up, above the band. */
+const R_OVT={x:0,y:0,w:1080,h:1920,r:0,ov:'top'}, R_OVB={x:0,y:0,w:1080,h:1920,r:0,ov:'bottom'};
+const PANEL_OVB_Y=1320, OVB_CAP=1155, OVT_CAP_MIN=512;   /* bottom band centre (≈1230–1410, above Instagram's caption zone) · caption bottom edge above it · top band ends ≈476 */
+/* caption bottom edge in an overlay layout: c = where it would sit otherwise (1460, or theme capY) — kept out of the band */
+function ovCap(R,c,bh){ return R.ov==='bottom'?Math.min(OVB_CAP,c):Math.max(OVT_CAP_MIN+bh,c); }
 /* 📱 استوديو الجوال (16 سبتمبر): المشاهد والملصقات وإطفاء «ورا الراس» تجي من studio.json عبر init({studio}) */
 let BEHIND_OFF=[]; const R_COLLAGE={x:0,y:1920,w:1080,h:1920,r:0};   /* كولاج: الفيديو تحت الشاشة، الشخص مقصوص فوق ورقة */
 let BROLL=[];   /* لقطات بي-رول من الاستوديو: {k,s,e,mode:'full'|'card'} */
@@ -145,7 +156,7 @@ function hookCenter(){ if(_HC) return _HC;
     if(xs.length>=5){ xs.sort((a,b)=>a-b); ys.sort((a,b)=>a-b); return (_HC=[xs[xs.length>>1],ys[ys.length>>1]]); } }
   return (_HC=[540,760]); }
 SCENE_LIST.push(['hookZoom',hookZoom,'video']);
-function rectByName(n){return ({R_FULL,R_DOWN,R_UP,R_LOWER,R_STAGE,R_SIDE,R_COLLAGE,R_OFF:(typeof R_OFF!=='undefined'?R_OFF:R_FULL)})[n]||R_FULL;}   /* عند النداء لا عند التحميل — R_OFF يتعرّف بعدين */
+function rectByName(n){return ({R_FULL,R_DOWN,R_UP,R_OVT,R_OVB,R_LOWER,R_STAGE,R_SIDE,R_COLLAGE,R_OFF:(typeof R_OFF!=='undefined'?R_OFF:R_FULL)})[n]||R_FULL;}   /* عند النداء لا عند التحميل — R_OFF يتعرّف بعدين */
 let STICK=[];
 /* 🆕 v2.5 «شرح كامل» (R_OFF): المتحدث يختفي — كرته ينزلق تحت الشاشة (نفس مقاس R_LOWER بس y=1920)
    والشاشة كلها للرسم. صوته يكمّل والكابشن يبقى تحت عند 1460. مرة أو مرتين بالفيديو، 4-8 ثوانٍ، عند
@@ -391,7 +402,7 @@ function caption(t){
     const LH2=Math.round(FS2*1.33); const bh2=LL.length*LH2;
     /* ⛔ قاعدة ماجد (23 سبتمبر): الكابشن ما ينكتب على وجهه أبداً. الستايلات بلا كرت كانت تثبّت عند 1400
        مهما كان وضع الفيديو، فبوضع الكرت (R_DOWN/R_LOWER) تطيح الكلمات على وجهه. الحين تطلع فوق الكرت. */
-    const _Rc=vtarget(t), by2=_Rc.up?_Rc.y+_Rc.h+36:(_Rc.y>700&&!_Rc.off)?Math.max(200,_Rc.y-46-bh2):((t>=CAP_Y_FROM&&CAP_Y<1460?CAP_Y:1400)-bh2);
+    const _Rc=vtarget(t), by2=_Rc.up?_Rc.y+_Rc.h+36:_Rc.ov?ovCap(_Rc,(t>=CAP_Y_FROM&&CAP_Y<1460?CAP_Y:1400),bh2)-bh2:(_Rc.y>700&&!_Rc.off)?Math.max(200,_Rc.y-46-bh2):((t>=CAP_Y_FROM&&CAP_Y<1460?CAP_Y:1400)-bh2);
     X.save();X.globalAlpha=a;X.translate(540,by2+bh2/2+dy);X.scale(sc,sc);X.translate(-540,-(by2+bh2/2));
     X.textAlign='right';X.textBaseline='middle'; X.font='900 '+FS2+'px '+FONT;
     let lastX=null,lastY=null;
@@ -404,7 +415,7 @@ function caption(t){
   const CUT=(cutoutActive(t)||headoutActive(t))&&PTOP>200;   /* الكابشن فوق راسه بالوضعين */
   const SEAM=0;   /* ⛔ 23 سبتمبر: كان الكرت يركب 42٪ منه على حافة الفيديو فيغطي جبهة المتحدث — الحين فوق الكرت بالكامل */
   const UPC=!!_R.up&&!CUT;   /* R_UP: caption right under his face, above the bottom panel */
-  const bx=540-bw/2,by=UPC?_R.y+_R.h+36:(CUT?PTOP-46:(LOW?_R.y-60+SEAM:(t>=CAP_Y_FROM?CAP_Y:1460)))-bh;   /* 1460 عادةً · وعلى حافة الفيديو بوضع «الفيديو تحت» */
+  const bx=540-bw/2,by=UPC?_R.y+_R.h+36:(_R.ov&&!CUT?ovCap(_R,(t>=CAP_Y_FROM?CAP_Y:1460),bh):CUT?PTOP-46:(LOW?_R.y-60+SEAM:(t>=CAP_Y_FROM?CAP_Y:1460)))-bh;   /* 1460 عادةً · وعلى حافة الفيديو بوضع «الفيديو تحت» */
   X.save();X.globalAlpha=a;X.translate(540,by+bh/2+dy);X.scale(sc,sc);X.translate(-540,-(by+bh/2));
   sh(48,20,0.30);X.fillStyle=cBG(0.96);rr(bx,by,bw,bh,38);X.fill();nsh();
   X.strokeStyle=cINK(0.09);X.lineWidth=2.5;rr(bx,by,bw,bh,38);X.stroke();
@@ -906,7 +917,8 @@ function brCard(k,dt,sp,a,s0,s1){const im=brFrame(k,dt,sp);if(!im)return;
   X.strokeStyle=cINK(0.14);X.lineWidth=3;rr(BRC.x,BRC.y,BRC.w,BRC.h,BRC.r);X.stroke();X.restore();}
 /* ---------- لوحة فوق الوجه بوضع R_DOWN: ارسم اللوحة بإحداثيات 130..950 × 278..458 وهي تتكبّر 1.2 وحدها ---------- */
 function panelIn(t,s,e,fn){ if(t<s+TR-0.1||t>e)return; const k=ease(pr(t,s+TR-0.1,s+TR+0.25)), out=1-pr(t,e-0.2,e);
-  const up=!!(vtarget(t)||{}).up, cy=up?PANEL_LOW_Y:368, sc=up?1.0:1.2;   /* R_UP → the same panel drawn at the bottom */
+  const VR=vtarget(t)||{}, up=!!VR.up, ovb=VR.ov==='bottom';   /* R_UP / R_OVB → the same panel drawn at the bottom */
+  const cy=up?PANEL_LOW_Y:ovb?PANEL_OVB_Y:368, sc=(up||ovb)?1.0:1.2;
   X.save();X.globalAlpha*=k*out;X.translate(540,cy+(1-k)*22);X.scale(sc,sc);X.translate(-540,-368);fn(t);X.restore();}
 /* ملاحظة: اللوحة تبدأ بعد TR (0.42ث) — تنتظر الفيديو يخلص نزوله حتى ما ترتسم فوق وجهه */
 

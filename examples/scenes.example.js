@@ -1,6 +1,7 @@
 /* Example scenes from a real reel (wailzenz-video-dz house style). Copy the patterns, not the content:
    • w('word', n) finds the n-th time a word is said in caps.json — every scene is tied to word times
-   • SCENES alternates R_UP (face top, panel bottom) / R_DOWN / R_LOWER / R_FULL
+   • SCENES alternates R_UP (face top, panel bottom) / R_DOWN / R_LOWER / R_FULL — and, since v1.1, the overlay bands
+     R_OVT / R_OVB (full-screen face, panel in a band on top or at the bottom; see sStep / sFlow at the end)
    • panels are visuals only — they never repeat the caption. Load it in compose.html after motion-kit.js. */
 /* test1 v3 — مشاهد الريل بقواعد المستخدم (20 أكتوبر):
    1) اللوحة ما تكرر كلمات الكابشن — رسوم بس (أيقونات، واجهات، لوحات)   2) القص في السكوت بس   3) اللوحة مرة فوق ومرة تحت.
@@ -149,5 +150,43 @@ function sBoard(t) {
   X.restore();
 }
 
+/* ── v1.1 — overlay bands: his face keeps the whole frame, the panel sits in a band, no black background ──
+   Add them to SCENES like any layout, from word times, e.g. inside MV.ready:
+     BANDS.top    = { s: w('أول'), e: w('ثاني'), step: 1, of: 3 };   SCENES.push({ s: BANDS.top.s, e: BANDS.top.e, m: R_OVT });
+     BANDS.bottom = { s: w('ثاني'), e: w('ثالث') };                  SCENES.push({ s: BANDS.bottom.s, e: BANDS.bottom.e, m: R_OVB });
+   (keep SCENES sorted by time). R_OVB lifts the caption above the band — on a close-up use R_OVT instead. */
+const BANDS = { top: null, bottom: null };
+
+/* top band · glass card — step pill, two icons, a segmented progress bar (the idea, never the caption words) */
+function sStep(t) {
+  const B = BANDS.top; if (!B || t < B.s || t > B.e) return;
+  panelIn(t, B.s, B.e, () => {
+    glass(150, 270, 780, 196, 34, 0.58);                                   // semi-transparent card in the theme colour
+    X.fillStyle = ACC; rr(190, 298, 118, 46, 23); X.fill();
+    const two = n => String(n).padStart(2, '0');
+    T(two(B.step) + ' / ' + two(B.of), 249, 322, '800 28px ' + FONT, BG, 'center', 'ltr');   // numbers → 'ltr', or «03 / 01»
+    const k1 = pr(t, B.s + 0.3, B.s + 0.8), k2 = pr(t, B.s + 0.9, B.s + 1.4);
+    node(430, 350, 46, k1, bubbleIcon); arrow(486, 604, 350, k2); node(660, 350, 46, k2, codeIcon);
+    const n = B.of, sw = (700 - (n - 1) * 12) / n, f = lerp(B.step - 1, B.step, ease(pr(t, B.s + 0.4, B.s + 1.0)));
+    for (let q = 0; q < n; q++) {
+      const x = 190 + q * (sw + 12); X.fillStyle = cINK(0.22); rr(x, 428, sw, 12, 6); X.fill();
+      const k = cl(f - q, 0, 1); if (k > 0) { X.fillStyle = ACC; rr(x, 428, sw * k, 12, 6); X.fill(); }
+    }
+  });
+}
+
+/* bottom band · transparent — icons straight on the video, a dark soft shadow (dsh) for contrast */
+function sFlow(t) {
+  const B = BANDS.bottom; if (!B || t < B.s || t > B.e) return;
+  panelIn(t, B.s, B.e, () => {
+    const k = i => ease(pr(t, B.s + 0.25 + i * 0.45, B.s + 0.6 + i * 0.45));
+    X.save(); dsh();
+    X.globalAlpha *= k(0); appIcon(330, 368, 120, INK); X.restore();
+    X.save(); dsh(); X.globalAlpha *= k(1); stackIcon(540, 368, 110, 3, ACC); X.restore();
+    X.save(); dsh(); X.globalAlpha *= k(2); gearIcon(750, 368, 110, INK); X.restore();
+    arrow(400, 470, 368, pr(t, B.s + 0.5, B.s + 0.9)); arrow(610, 680, 368, pr(t, B.s + 0.95, B.s + 1.35));
+  });
+}
+
 SCENE_LIST.push(['sTeam', sTeam], ['sTerminal', sTerminal], ['sTimeline', sTimeline], ['sVibe', sVibe], ['sTools', sTools],
-                ['sNoDevs', sNoDevs], ['sBoard', sBoard], ['sKhulasa', sKhulasa]);
+                ['sNoDevs', sNoDevs], ['sBoard', sBoard], ['sKhulasa', sKhulasa], ['sStep', sStep], ['sFlow', sFlow]);
