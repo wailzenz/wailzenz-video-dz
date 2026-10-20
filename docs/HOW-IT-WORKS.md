@@ -36,6 +36,20 @@ Overlay helpers in `compose.html`: `glass(x, y, w, h, r, a)` draws a semi-transp
 
 See [`examples/scenes.example.js`](../examples/scenes.example.js) for a full reel's scenes, tied to word times.
 
+## The fast way (`reel.py` + the scene kit)
+
+```bash
+source setup/env.sh; R="python3 skills/dz-reel/scripts/reel.py"
+$R prep my-video.mov work/my-reel --lang en   # or ar / fr
+$R script work/my-reel                        # the numbered script — say what to drop
+$R cut work/my-reel
+#  scenes.js = KIT.reel([...])  (see examples/scenes.kit.example.js)
+$R preview work/my-reel                       # one 6-frame sheet
+$R final work/my-reel --name my-reel --cover "Line|*line*"
+```
+
+Claude follows this path by itself; you only answer one question (what to drop, brightness, end card) and look at the preview.
+
 ## A reel, step by step (`dz-reel`)
 
 1. **Setup check** — `scripts/00_setup.sh` confirms ffmpeg, Python, Chrome and puppeteer-core.

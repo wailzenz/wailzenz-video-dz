@@ -180,9 +180,14 @@ def _h(*a):
     return int(hashlib.sha1("|".join(map(str, a)).encode("utf-8")).hexdigest()[:8], 16) / 0xFFFFFFFF
 
 
+# wailzenz-video-dz house style (2026-10-20, «I didn't like the screenshot pause of my face»): moves that freeze the speaker's
+# picture into a still are never picked — 65 stickerFreeze (frozen cut-out sticker) and 87 scanLine (frozen old frame under the line).
+HOUSE_OFF = {"stickerFreeze", "scanLine"}
+
+
 def plan(title, family="auto", cues=(), dry=False):
     cat = catalog()
-    off = set((load_profile().get("moves") or {}).get("off", []))
+    off = set((load_profile().get("moves") or {}).get("off", [])) | HOUSE_OFF
     if sys.platform != "darwin":                           # حركات القصّ (mac: true) تحتاج Vision بالماك — برّاه ما تنختار
         off |= {m["id"] for m in cat if m.get("mac")}
     pref = set((load_profile().get("moves") or {}).get("on", []))

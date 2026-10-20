@@ -19,6 +19,33 @@ description: مونتاج فيديو هدرة للكاميرا (talking head) إ
 > 11. **Close-up framing:** the face card crops from `studio.json` → `cardTop`; if the mouth falls below y ≈ 1600 (Instagram's caption zone) raise it (≈ 0.3). `R_UP` shows a little more above the head automatically.
 > 12. **Not always a 50/50 split.** A panel can also be a band over the full-screen video, so his face keeps the whole frame: `R_OVT` = top band (≈ y 260–480, under Instagram's top bar) or `R_OVB` = bottom band (≈ y 1230–1410; the caption moves up above it). `panelIn` places the panel in the band by itself. The background doesn't have to be black: draw straight on the video (a dark soft shadow, `dsh()`, for contrast) or on `glass(x,y,w,h,r,a)` — a semi-transparent card in the theme colour (a ≈ 0.5–0.6). Reference look: a glass card on top with a step pill («07 / 08»), an icon, the idea's name (never the caption words — rule 7) and a segmented progress bar. Bands suit light moments (step counters, icons, progress, a before → after pill); keep the split screens for heavy explainers. Mix all of them through the video. `R_OVB` needs room under the chin: in a close-up the caption above the band lands on his mouth, so use `R_OVT` there — check the preview frame. Numbers or Latin text inside a panel: `T(text,x,y,font,colour,'center','ltr')`, or they come out reversed («08 / 07»).
 > 13. **Captions never cover the face — always under the chin.** Run `23_headcrop.py` on every video: it also writes the face track (`studio.json` → `face`). Wherever a caption sits over the full-screen picture (`R_FULL`, `R_OVT`, `R_OVB`, every caption style), the engine puts its top under the chin. In a close-up it slides that scene's video up (only as far as the hair allows; the strip left at the bottom shows the theme colour, mostly under Instagram's own caption) and drops to one line per page when two don't fit. The split layouts keep the caption off the face by design (`R_UP`: under the face card · `R_DOWN` / `R_LOWER`: on the seam above it). Never put captions above the head — a `theme.json` → `capY` above the head is overridden. `08_safe_check.js` fails on any caption that still lands on the face: give that sentence `R_UP` / `R_DOWN`, or `nocap`, and don't deliver before «✅ ولا كابشن على الوجه». `theme.json` → `"chinLift": false` turns the lift off (more sentences then need a split layout). Tip for the user: filming a little further back (chin around the middle of the frame) leaves room for full-screen captions without any lift.
+> 14. **Never freeze the speaker's picture.** No «screenshot pause» of the face: `stickerFreeze` (65) and `scanLine` (87) are banned (`35_moves.py` never picks them), and no scene holds a still frame of him (`MV.frameAt` / `MV.personAt` freezes, polaroids). His face is always live video; depth moments use the moving cut-out instead (behind the head, `MV.person`, orbit…).
+
+## ⚡ Fast path — read this, not the rest (wailzenz-video-dz)
+
+For a talking-head reel, these steps are the whole job. Open the rest of this file or `references/` **only** when a step fails or
+the user asks for something not covered here. Every command prints a few lines; full logs are in `<work>/logs/`.
+
+```bash
+source "${CLAUDE_SKILL_DIR}/../../setup/env.sh"; R="python3 ${CLAUDE_SKILL_DIR}/scripts/reel.py"
+$R prep <video> <work> --lang ar      # or --lang en / fr · copy, dropped frames, light check, cut plan, transcription, draft fixes.json
+```
+1. **Correct `fixes.json`** (same word count per sentence): Arabic → Darija spelling (`references/dialect-dz.md`), a `gloss` for every
+   French/English term, 2–4 `hot` words; English/French → wrong words only, 2–4 `hot` words.
+2. `$R script <work>` → **one** AskUserQuestion: lines to drop (`python3 scripts/10_script_edit.py <work> drop N`) · brightness, only if
+   prep flagged it (show `before_after.jpg`) · end card.
+3. `$R cut <work> [--grade] [--endcard ar|none]` — the house theme (`$WVD_HOME/house-theme.json`), cut + zoom, frames, face track.
+4. **Write `<work>/scenes.js` as `KIT.reel([...])`** — about 15 lines, pattern `examples/scenes.kit.example.js`, options at the top of
+   `scripts/scene-kit.js`. House style: a different layout every scene (`R_OVT`/`R_OVB` bands, `R_UP`/`R_DOWN` splits, `R_OFF` full chart,
+   `R_FULL`), panels = icons / pill / bars (never the caption words), a snap zoom in the first second, never a frozen face.
+   Depth moment: words behind the head for the hook — `node scripts/11_behind_text.js <work> stack 1:1-3` (sentence 1, words 1–3; the caption hides meanwhile).
+5. `$R preview <work>` → read `sheet.jpg` (one image). Fix `scenes.js`, repeat only if something is wrong.
+6. `$R final <work> --name <name> --cover "Line|*line*"` → render, the kit's sound cues, −14 LUFS, SRT, safe-zone + chin + sync + seam
+   checks, cover on the first frame, export to `exports/`. Read `final_sheet.jpg` once. ❌ → fix and run `final` again (only changed
+   designs re-render).
+
+**Budget:** at most 3 images per video (preview sheet, final sheet, cover grid), no full-file reads (`grep -n`), never print logs,
+short messages. **Deliver:** duration, what was cut, number of scenes, loudness — and that nothing was posted.
 
 # ريل من فيديو كلام — بلا برنامج مونتاج
 

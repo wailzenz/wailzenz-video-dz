@@ -2,6 +2,20 @@
 
 ## 1.2.0 — 2026-10-20
 
+### Added — a faster pipeline (fewer tokens, less time)
+- **`scripts/reel.py`**: the whole talking-head reel in five commands — `prep` · `script` · `cut` · `preview` · `final`. Each prints a
+  few lines (full logs in `<work>/logs/`); `final` renders, adds sound, masters to −14 LUFS, writes SRT, runs the safe-zone / chin /
+  sync / seam checks, puts the cover first and exports. The English test reel went through in about a minute of machine time.
+- **Scene kit** (`scripts/scene-kit.js`): the house style as ready-made blocks — top/bottom glass bands with a pill, icons and a
+  progress bar · a you-vs-them board · a full-screen growth chart with flips · snap zoom — plus 25 theme-coloured icons. A video's
+  scenes become ~15 lines of `KIT.reel([...])` with times given as spoken words (`'hour#1+0.2'`). It also writes the sound cues and
+  the preview moments (`kit_cues.json`). Example: `examples/scenes.kit.example.js`.
+- **Fast path** at the top of `dz-reel`: one page to read instead of the whole manual; at most 3 images per video.
+- `$WVD_HOME/house-theme.json`: the user's look, copied into every new video.
+
+### Changed — never freeze the speaker
+- House-style rule 14: no «screenshot pause» of the face. `stickerFreeze` (65) and `scanLine` (87) are never picked by the moves board.
+
 ### Added — captions never cover the face, always under the chin
 - `23_headcrop.py` also writes the face track (`studio.json` → `face`: head top and chin every 0.1 s; the chin includes ~10% of the
   face height for a beard). Run it on every video.

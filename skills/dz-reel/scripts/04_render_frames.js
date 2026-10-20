@@ -96,6 +96,9 @@ async function movesInject(p){ if(await p.evaluate(()=>!!(window.FX&&window.MV))
     return faces>0 && W.every(w=>document.fonts.check(w+' 60px '+f,'عربي'));
   },FF);
   if(!fontOK) console.log('⚠️ الخط '+FF+' ما اكتمل تحميله — الرسم بيكمل بخط بديل');
+  /* wailzenz-video-dz: the scene kit's sound cues + preview times → kit_cues.json (reel.py builds sfx.json and the preview from it) */
+  const KITX=await p.evaluate(()=>window.KIT&&KIT.export?KIT.export():null);
+  if(KITX) fs.writeFileSync(W+'kit_cues.json',JSON.stringify(KITX));
   const grab=async(t,file,q)=>{
     const i=Math.min(NVF,Math.max(1,Math.round(t*FPS)+1));
     const id=String(i).padStart(5,'0');
@@ -113,7 +116,8 @@ async function movesInject(p){ if(await p.evaluate(()=>!!(window.FX&&window.MV))
   };
   if(mode==='preview'){
     fs.mkdirSync(W+'prev',{recursive:true});
-    for(const t of process.argv.slice(4).map(Number)){await grab(t,W+'prev/t'+t.toFixed(2)+'.jpg',0.9);console.log('معاينة',t);}
+    let PT=process.argv.slice(4); if(!PT.length||PT[0]==='auto') PT=(KITX&&KITX.preview&&KITX.preview.length)?KITX.preview:[0.5,dur*0.25,dur*0.5,dur*0.75,dur-0.5];   /* auto = the kit's moments */
+    for(const t of PT.map(Number)){await grab(t,W+'prev/t'+t.toFixed(2)+'.jpg',0.9);console.log('معاينة',t);}
   }else{
     fs.mkdirSync(W+'out',{recursive:true});
     const n=Math.round(dur*FPS);
