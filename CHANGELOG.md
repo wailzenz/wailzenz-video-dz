@@ -13,6 +13,22 @@
 - **`08_safe_check.js`** reports each lift and fails (exit 3) on any caption that still lands on the face, with the sentence's times —
   give it `R_UP` / `R_DOWN` or `nocap`.
 - House-style rule 13 in `dz-reel`; docs and READMEs.
+- `safe.json` → `"ignore": [{s, e, why}]` in `08_safe_check.js`: a full-frame background graphic (a sticker's halftone) no longer
+  reads as 100% ink; each ignored window is printed with its reason, and its text is checked by eye.
+- `stickerFreeze` takes `ty` (the word sticker's height), so it can stay above the 1500 band.
+
+### Fixed — first fully English video
+- English/French videos are recognised (no Arabic letters in `fixes.json`): no Arabic-gloss warnings, and Latin words are no
+  longer all highlighted.
+- Latin caption words keep their punctuation on the right («have.», was «.have») — the page is right-to-left.
+- The highlight pill sweeps in reading order (Latin left → right) and the letters it hasn't reached stay readable (was «oney.»).
+- A sentence's first word can be timed late too (a clip that opens mid-word): the voice-onset snap now also moves it back
+  (0.26 → 0.05 s on the test). Darija timings are unchanged.
+- The sentence grouping no longer splits a sentence's last word into a caption of its own when the 12-word limit is reached.
+- `stickerFreeze`'s word sticker was white on white with a dark theme — it now uses the darker theme colour.
+
+### Removed
+- The upstream author's paid-course promotion that `dz-reel` added to the end of every delivery.
 
 ## 1.1.0 — 2026-10-20
 

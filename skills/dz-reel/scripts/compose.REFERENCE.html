@@ -423,6 +423,7 @@ function caption(t){
       if(CAPSTYLE==='bar'&&act){ X.fillStyle=ACC; rr(x-i.w-16,cy+lift-fs*0.66,i.w+32,fs*1.28,18); X.fill(); }
       X.shadowColor='rgba(0,0,0,0.75)';X.shadowBlur=22;X.shadowOffsetY=5;
       X.fillStyle=(CAPSTYLE==='bar'&&act)?onACC():((i.hot&&sp)?ACC:'#FFFFFF');
+      X.direction=_LAT.test(i.t)?'ltr':'rtl';   /* wailzenz-video-dz: «have.» not «.have» — Latin words left-to-right */
       X.fillText(i.t,x,cy+lift);
       X.shadowColor='transparent';X.shadowBlur=0;
       if(CAPSTYLE==='underline'&&sp){ const k=act?ease(Math.min(1,(t-i.s)/0.22)):1; X.fillStyle=ACC; rr(x-i.w*k,cy+lift+fs*0.52,i.w*k,10,5); X.fill(); }
@@ -469,10 +470,14 @@ function caption(t){
   L.forEach((ln,li)=>{let x=540+ln.w/2;const cy=by+PADY+LH*li+LH/2;
     for(const i of _vis(ln.items)){const act=t>=i.s&&t<i.e,sp=t>=i.s;let lift=0;
       if(act&&!CAP_STILL){const k=Math.min(1,(t-i.s)/0.1);lift=-5*Math.sin(k*Math.PI);}   /* capStill: تتلوّن بمكانها بلا قفزة */
-      if(i.hot&&sp){const k=Math.min(1,(t-i.s)/0.16),gw=(i.w+28)*ease(k),gh=FS+21;
-        X.fillStyle=ACC;rr(x+14-gw,cy-gh/2+lift,gw,gh,15);X.fill();X.fillStyle=onACC();}
+      let pill=null;   /* wailzenz-video-dz: the pill sweeps in reading order (Latin left→right), and letters it hasn't reached stay readable */
+      if(i.hot&&sp){const k=Math.min(1,(t-i.s)/0.16),gw=(i.w+28)*ease(k),gh=FS+21,px=_LAT.test(i.t)?x-i.w-14:x+14-gw;
+        X.fillStyle=ACC;rr(px,cy-gh/2+lift,gw,gh,15);X.fill();X.fillStyle=onACC(); if(k<1) pill=[px,cy-gh/2+lift,gw,gh];}
       else X.fillStyle=act?ACC:INK;
-      X.fillText(i.t,x,cy+2+lift);x-=i.w+GAP;}});
+      X.direction=_LAT.test(i.t)?'ltr':'rtl';   /* wailzenz-video-dz: «have.» not «.have» */
+      if(pill){ X.save(); X.fillStyle=INK; X.fillText(i.t,x,cy+2+lift); X.beginPath(); X.rect(pill[0],pill[1],pill[2],pill[3]); X.clip(); X.fillStyle=onACC(); X.fillText(i.t,x,cy+2+lift); X.restore(); }
+      else X.fillText(i.t,x,cy+2+lift);
+      x-=i.w+GAP;}});
   X.restore();}
 function wordsOf(i){return (CAPS[i]&&CAPS[i].w)||[];}
 /* أي مشهد يشير لجملة مو موجودة بهذا الفيديو ما يوقف الرسم — يتخطّى وحده */

@@ -1213,10 +1213,10 @@
       if (!(o.videoAt && o.videoAt(X, o.s)) && o.video) o.video(X); X.restore(); X.restore();
     }
     const ts = o.s + 0.2, kt = at(t, ts, ts + 0.25, 'backOut') * (1 - (o.out != null ? at(t, o.out - 0.12, o.out + 0.1, 'cubicIn') : 0));
-    if (o.text !== null && kt > ON) { const s = o.text || 'وقف!', size = 130; X.save(); X.translate(560, 1420); X.rotate(3 * Math.PI / 180); const z = 1.3 - 0.3 * kt; X.scale(z, z); X.globalAlpha *= cl(kt * 3);
+    if (o.text !== null && kt > ON) { const s = o.text || 'وقف!', size = 130; X.save(); X.translate(560, o.ty || 1420);   // o.ty = word sticker centre y (wailzenz-video-dz: 1380 keeps it above the 1500 band) X.rotate(3 * Math.PI / 180); const z = 1.3 - 0.3 * kt; X.scale(z, z); X.globalAlpha *= cl(kt * 3);
       X.font = ctx.font('display', 400, size); const w = Math.min(760, X.measureText(s).width) + 110, h = size * 1.45;
       shd(X, 22, 12, 0.3); X.fillStyle = '#FFFFFF'; X.beginPath(); X.roundRect(-w / 2 - 14, -h / 2 - 14, w + 28, h + 28, 40); X.fill(); noShd(X);
-      X.fillStyle = P.ink; X.beginPath(); X.roundRect(-w / 2, -h / 2, w, h, 28); X.fill();
+      X.fillStyle = darker(P.ink, P.bg); X.beginPath(); X.roundRect(-w / 2, -h / 2, w, h, 28); X.fill();   // wailzenz-video-dz: dark themes have a light ink
       ctx.text(X, s, 0, size * 0.36, { family: 'display', size, color: '#FFFFFF', maxWidth: 740 }); X.restore(); }
     const fl = pr(t, o.s, o.s + 0.05); if (fl < 1) { X.fillStyle = 'rgba(255,255,255,' + (0.6 * (1 - fl)) + ')'; X.fillRect(0, 0, 1080, 1920); }
     X.restore();

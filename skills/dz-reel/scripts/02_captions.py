@@ -28,7 +28,10 @@ FXMAP = fx.get("fx", {})   # 🎬 حركات الكلمة العربية (v3.1):
 #    highlighted by default ("hot_latin": false turns that off); "gloss_quotes" sets the marks (default "").
 GLOSS = {k.strip(): v for k, v in fx.get("gloss", {}).items()}
 GQ = fx.get("gloss_quotes", '""')
-HOT_LATIN = fx.get("hot_latin", True)
+# An English or French video (no Arabic letters in fixes.json) has no glosses and no automatic Latin highlight —
+# the gloss rule is for French/English terms inside Darija.
+ARABIC = any(re.search(r"[\u0600-\u06FF]", t) for f in FIX for t in ([f] if isinstance(f, str) else f) if t)
+HOT_LATIN = fx.get("hot_latin", ARABIC)
 GLOSS_REPEAT = fx.get("gloss_repeat", False)   # False = gloss a term the first time it appears in the video only
 GLOSSED = set()
 LAT = re.compile(r"[A-Za-zÀ-ɏ]")
@@ -114,5 +117,5 @@ _tail=float(json.load(open(os.path.join(W,"cut.json"))).get("tail",0) or 0)
 json.dump({"total":round(acc+_tail,3),"cards":cards},open(os.path.join(W,"caps.json"),"w"),ensure_ascii=False,indent=1)
 print("كروت:",len(cards)," المدة:",round(acc,2))
 for c in cards: print(f"{c['s']:6.2f}-{c['e']:6.2f}  "+" ".join(x['t'] for x in c['w']))
-if UNGLOSSED:
+if UNGLOSSED and ARABIC:
     print("⚠️ French/English terms without an Arabic gloss (add them to fixes.json → \"gloss\"): " + " · ".join(dict.fromkeys(UNGLOSSED)))

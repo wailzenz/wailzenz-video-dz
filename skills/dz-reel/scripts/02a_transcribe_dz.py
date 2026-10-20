@@ -32,7 +32,9 @@ def group_words(words, gap=0.6, max_words=12, max_dur=6.0):
     """[(text, start, end, p)] -> sentence segments, split on pauses, end punctuation or length."""
     segs, cur = [], []
     for w in words:
-        if cur and (w[1] - cur[-1][2] >= gap or len(cur) >= max_words or w[2] - cur[0][1] > max_dur):
+        # the length limits never orphan a sentence's last word («…doesn't» | «have.» showed «have.» alone) — only a pause splits it off
+        too_long = (len(cur) >= max_words or w[2] - cur[0][1] > max_dur) and not w[0].endswith(END_PUNCT) if cur else False
+        if cur and (w[1] - cur[-1][2] >= gap or too_long):
             segs.append(cur); cur = []
         cur.append(w)
         if w[0].endswith(END_PUNCT):
@@ -87,7 +89,8 @@ def speech_onsets(wav, hop=0.01):
 
 def snap_starts(words, wav):
     """whisper's time for the first word of a sentence is often early (it can sit in the silence before you
-    speak). Move such starts forward to where the voice actually begins, never past the next word."""
+    speak) — or late when the voice is already going. Move such starts to where the voice actually begins,
+    never past the next word and never back into the previous one."""
     try:
         act, hop = speech_onsets(wav)
     except Exception:
@@ -101,6 +104,10 @@ def snap_starts(words, wav):
             hit = next((k for k in range(lo, min(hi, len(act))) if act[k]), None)
             if hit is not None and hit * hop > a:
                 a = hit * hop
+            else:   # …or late: the voice is already going before whisper's start (a clip that opens mid-word) → walk back to its onset
+                k, stop = int(a / hop) - 1, int(max(prev_end, a - 0.35) / hop)
+                while stop <= k < len(act) and act[k]: k -= 1
+                if (k + 1) * hop < a - 0.03: a = round((k + 1) * hop, 3)
         out.append((t, a, max(b, a + 0.08), p))
     return out
 

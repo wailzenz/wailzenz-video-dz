@@ -129,7 +129,11 @@ const FLAT_B='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2
   for(let t=0;t<DUR;t+=0.4) T.add(+t.toFixed(2));
   for(const c of caps.cards){T.add(+(c.s+0.25).toFixed(2));T.add(+((c.s+c.e)/2).toFixed(2));}
   for(let t=caps.total;t<DUR;t+=0.3) T.add(+t.toFixed(2));
-  const times=[...T].filter(t=>t>=0&&t<DUR).sort((a,b)=>a-b);
+  /* wailzenz-video-dz: safe.json → "ignore": [{s, e, why}] = a full-frame background graphic (sticker halftone, full-screen colour)
+     that would read as 100% ink. Those samples are skipped for the zones — listed below, and any text in them is checked by eye. */
+  const IGN=Array.isArray(SAFE.ignore)?SAFE.ignore:[];
+  const times=[...T].filter(t=>t>=0&&t<DUR&&!IGN.some(g=>t>=g.s&&t<=g.e)).sort((a,b)=>a-b);
+  for(const g of IGN) console.log(`ℹ️  ${(+g.s).toFixed(2)}–${(+g.e).toFixed(2)}ث بلا فحص مناطق (safe.json ← ignore): ${g.why||'بلا سبب — اكتب السبب'} — النص اللي فيها بالعين`);
 
   const res=await p.evaluate(async(times,zones,bg,FA,FB,BH)=>{
     const CLEAR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
