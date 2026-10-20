@@ -206,6 +206,18 @@ const FLAT_B='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2
     if(!ok&&z.hard) bad.push(z);
     console.log(`${ok?'✅':(z.hard?'❌':'⚠️ ')} ${z.k}: ${pct(z.worst)} من المساحة عند ${z.at.toFixed(2)}ث (المسموح ${pct(z.max)})`);
   }
+  /* wailzenz-video-dz (2026-10-20): «captions never cover the face — always under the chin» — the engine notes every caption it
+     could not fit under the chin (window.__onFace) while the samples above were drawn */
+  const CH=await p.evaluate(()=>window.__chinInfo?window.__chinInfo():null);
+  let onFace=[];
+  console.log('— الكابشن تحت الذقن —');
+  if(!CH||!CH.face) console.log('⚠️  ما فيه تتبع للوجه (studio.json ← face) — شغّل 23_headcrop.py، ولا تحقق باللقطات إن الكابشن ما يغطيش الوجه');
+  else{
+    for(const l of CH.lifts) console.log(`ℹ️  ${l.s.toFixed(2)}–${l.e.toFixed(2)}ث: الفيديو طلع ${l.lift}px باش الكابشن يجي تحت الذقن (لقطة قريبة)`);
+    onFace=CH.onFace||[];
+    if(!onFace.length) console.log('✅ ولا كابشن على الوجه');
+    for(const f of onFace) console.log(`❌ الكابشن على الوجه ${f.s.toFixed(2)}–${f.e.toFixed(2)}ث (الذقن عند y ${f.chin}، ناقص ${f.short}px) — بدّل الوضع لـR_UP / R_DOWN، ولا nocap للجملة`+(CH.lift?'':' (theme.json ← chinLift:false)'));
+  }
   const worst=zones.slice().sort((a,b)=>(b.worst/b.max)-(a.worst/a.max))[0];
 
   if(SHOT&&worst&&bad.length){        /* لقطة حقيقية وفوقها المناطق بالأحمر — بس لو فيه فشل، وبعرض 540 */
@@ -234,7 +246,7 @@ const FLAT_B='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2
   }else if(SHOT) console.log('ℹ️  ما فيه فشل — ما طلّعت safe.jpg');
   await Promise.race([b.close(),new Promise(r=>setTimeout(r,5000))]);   /* v3.5: كروم أحياناً ما يقفل فيعلق الفحص بعد ما ينجح */
 
-  if(bad.length||!hookOK){ console.log('\n❌ لا تسلّم قبل الإصلاح: ارفع العنصر فوق الحزام أو صغّره.'); process.exit(3); }
+  if(bad.length||!hookOK||onFace.length){ console.log('\n❌ لا تسلّم قبل الإصلاح: '+(onFace.length?'الكابشن لازم يجي تحت الذقن · ':'')+'ارفع العنصر فوق الحزام أو صغّره.'); process.exit(3); }
   console.log('\n✅ كل شي داخل المنطقة الآمنة.');
   setTimeout(()=>process.exit(0),300);
 })();

@@ -25,7 +25,7 @@
 | `13_collage.js` · `13_collage_sfx.py` · `collage.TEMPLATE.html` | أسلوب الكولاج (`references/collage.md`) | مستقل |
 | `13_assets.py` | صورة من ويكيميديا (رخصة حرة) مع قصّ خلفية اختياري | مشترك |
 | `14_backdrop.py` | خلفية باهتة (`references/backdrop.md`) | الخفيف |
-| `23_headcrop.py` (+`facetrack.swift`) | **قصّ الكرت من فوق الراس** — ثابت طول الفيديو، يكتب `studio.json ← cardTop` (الخطوة 6.1) | ماك |
+| `23_headcrop.py` (+`facetrack.swift`) | **قصّ الكرت من فوق الراس** — ثابت طول الفيديو، يكتب `studio.json ← cardTop` + `face` (تتبع الوجه للكابشن تحت الذقن) (الخطوة 6.1) | ماك |
 | `15_podcast.py` · `16_render_pod.js` · `compose.PODCAST.html` · `facetrack.swift` | **وضع البودكاست** (`references/podcast.md`) | مستقل (ماك) |
 | `17_gen_scenes.py` | مشاهد مولّدة (`references/gen-scenes.md`) | الخفيف |
 | `18_long_transcribe.py` | تفريغ حلقة كاملة بقطع 20 ث عند السكتات (mlx على الماك ~8× أسرع) → `words.json` + `transcript.txt` | مشترك |

@@ -9,6 +9,10 @@
 
 python3 23_headcrop.py <work> [--from 2.0]   # بعد الخطوة 6 · --from = بداية أول كرت (ملء الشاشة قبله ما يحتاج)
 theme.json ← "cardZoom" (افتراضي 1): تقريب داخل الكرت — يفيد لو تحت جسمه نص محروق أو فراغ كبير
+
+wailzenz-video-dz (2026-10-20): also writes studio.json → "face" = the face track of the whole video
+({step, top, chin} — fractions of the frame height every 0.1 s) for the rule «captions never cover the face — always
+under the chin»: the engine puts every caption that sits over the full-screen picture below the chin. Run it on every video.
 """
 import json, os, statistics, subprocess, sys, tempfile
 
@@ -18,6 +22,7 @@ from _landscape import _facetrack
 HAIR = 0.35      # الشعر فوق صندوق Vision = 20-35٪ من طول الوجه (مقاس بالعين 28 سبتمبر · 0.50 خلّى فراغ كبير فوقه)
 STEP = 3         # كل ثالث فريم (10 بالثانية) يكفي
 PAD = 0.015      # هامش صغير فوق أعلى نقطة للراس — «مساحة آمنة» مو سقف فاضي
+BEARD = 0.10     # wailzenz-video-dz: Vision's box ends at the jaw line — a beard reaches ~10% of the face height below it
 FPS = 30
 
 def main(W, t0=0.0):
@@ -31,6 +36,7 @@ def main(W, t0=0.0):
         out = os.path.join(tmp, "ft.json")
         subprocess.run([ft, tmp, out], check=True, capture_output=True)
         rows = json.load(open(out))
+    track(W, rows, len(files[::STEP]))
     pts = []
     for r in rows:
         fc = r.get("face")
@@ -47,6 +53,28 @@ def main(W, t0=0.0):
     st.pop("head", None); st["cardTop"] = top
     json.dump(st, open(sp, "w"), ensure_ascii=False)
     print(f"✅ قصّ الكرت ثابت من {top:.0%} من أعلى الفريم (أعلى نقطة للراس {hi:.0%} ناقص هامش) · انكتب studio.json ← cardTop")
+
+def track(W, rows, n):
+    """wailzenz-video-dz: the face track for the chin rule → studio.json "face" (None where no face was found)."""
+    top, chin = [None] * n, [None] * n
+    for r in rows:
+        fc = r.get("face")
+        if not fc: continue
+        i = (int(r["f"].split(".")[0]) - 1) // STEP
+        if 0 <= i < n:
+            top[i] = round(max(0.0, fc["y"] - HAIR * fc["h"]), 4)
+            chin[i] = round(min(1.0, fc["y"] + fc["h"] * (1 + BEARD)), 4)
+    sp = os.path.join(W, "studio.json")
+    st = json.load(open(sp)) if os.path.exists(sp) else {}
+    got = [c for c in chin if c is not None]
+    if len(got) < 3:
+        st.pop("face", None); json.dump(st, open(sp, "w"), ensure_ascii=False)
+        print("⚠️ الوجه ما انرصد كفاية — قاعدة «الكابشن تحت الذقن» تتحقق بالعين من اللقطات"); return
+    st["face"] = {"step": round(STEP / FPS, 4), "top": top, "chin": chin}
+    json.dump(st, open(sp, "w"), ensure_ascii=False)
+    low = sorted(got)[int(0.9 * (len(got) - 1))]
+    print(f"✅ تتبع الوجه ({len(got)}/{n} لقطة) · الذقن يوصل لـ{low:.0%} من الطول ← انكتب studio.json ← face"
+          + (" · لقطة قريبة: الكابشن تحت الذقن يحتاج رفع الفيديو بالمشاهد ملء الشاشة (المحرّك يديرها)" if low > 0.64 else ""))
 
 if __name__ == "__main__":
     a = sys.argv[1:]

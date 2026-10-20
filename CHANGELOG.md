@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0 — 2026-10-20
+
+### Added — captions never cover the face, always under the chin
+- `23_headcrop.py` also writes the face track (`studio.json` → `face`: head top and chin every 0.1 s; the chin includes ~10% of the
+  face height for a beard). Run it on every video.
+- **`underChin()`**: wherever a caption sits over the full-screen picture (`R_FULL`, `R_OVT`, `R_OVB`; card, plain-text and big-word
+  styles), its top goes under the chin. A `theme.json` → `capY` above the head is overridden.
+- **`chinLift()`**: on a close-up, a full-screen scene's video slides up so the caption fits under the chin above Instagram's caption
+  zone — only as far as the hair allows, never in a scene with a cut-out / behind-the-head effect, and only when it saves at least one
+  caption. Card captions drop to one line a page when two lines don't fit. `theme.json` → `"chinLift": false` turns it off.
+- **`08_safe_check.js`** reports each lift and fails (exit 3) on any caption that still lands on the face, with the sentence's times —
+  give it `R_UP` / `R_DOWN` or `nocap`.
+- House-style rule 13 in `dz-reel`; docs and READMEs.
+
 ## 1.1.0 — 2026-10-20
 
 ### Added — overlay bands (not always a 50/50 split)

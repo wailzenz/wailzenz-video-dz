@@ -21,6 +21,7 @@ silences et erreurs coupés, sous-titres arabes mot par mot, motion design, effe
 | 🎬 **Motion design** | 100 animations prêtes, texte qui passe derrière votre tête, cartes, compteurs… |
 | 🔀 **Écran partagé qui alterne** | L'animation en haut et votre visage en bas, puis l'inverse — la mise en page change sans cesse |
 | 🪟 **Bandeaux en surimpression** | Pas toujours 50/50 : un bandeau fin en haut ou en bas, par-dessus votre vidéo plein écran, sur une carte transparente ou directement sur l'image |
+| 🙂 **Jamais de sous-titre sur le visage** | Par-dessus la vidéo plein écran, le sous-titre se place toujours sous le menton — le visage est suivi, et en gros plan l'image remonte un peu pour faire de la place |
 | 🧠 **Des visuels, pas un 2e sous-titre** | Les panneaux ne répètent jamais les mots du sous-titre : icônes, maquettes (terminal, timeline), tableaux comparatifs |
 | 🔊 **Audio** | Nettoyage de la voix, effets sonores libres de droits, volume à −14 LUFS |
 | 🎙️ **Plus que des reels** | Podcast → reels, montage sur le rythme, vidéos motion sans tournage, miniatures |
@@ -61,7 +62,7 @@ Mettez la vidéo dans un dossier et dites à Claude :
 
 Basé sur **[majed-video](https://github.com/majedphotos/video-ad-editor)** de **Majed Alzaabi** (MIT) — le moteur, les animations et la méthode de montage sont son travail ; merci à lui.
 Ce plugin ajoute la couche algérienne : transcription en darija, règles de hook algériennes, traduction arabe des termes en lettres latines, et correction de l'ordre des mots français/anglais dans les sous-titres.
-Il ajoute aussi un style maison : écran partagé qui alterne haut/bas, bandeaux en surimpression, panneaux qui ne répètent pas le sous-titre, découpage soigné. Liste complète : [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Il ajoute aussi un style maison : écran partagé qui alterne haut/bas, bandeaux en surimpression, sous-titres sous le menton, panneaux qui ne répètent pas le sous-titre, découpage soigné. Liste complète : [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ![](docs/img/split-screens.png)
 

@@ -21,6 +21,7 @@ silences and mistakes cut, word-by-word Arabic captions, motion graphics, sound 
 | 🎬 **Motion graphics** | 100 ready-made moves, text passing behind your head, maps, counters, cards… |
 | 🔀 **Alternating split screens** | Animation on top with your face below, then your face on top with the animation below — the layout keeps changing |
 | 🪟 **Overlay bands** | Not always 50/50: a slim band on top or at the bottom over your full-screen video, on a see-through card or straight on the picture |
+| 🙂 **Captions never on your face** | Over the full-screen video the caption always sits under your chin — your face is tracked, and on a close-up the picture slides up a little to make room |
 | 🧠 **Visuals, not a second caption** | Panels never repeat the words in the caption: icons, UI mockups (terminal, timeline), comparison boards |
 | 🔊 **Audio** | Voice cleanup, royalty-free sound effects, loudness to −14 LUFS |
 | 🎙️ **Beyond reels** | Podcast → reels, beat-synced montages, motion explainers with no filming, covers/thumbnails |
@@ -78,7 +79,7 @@ How it works, file formats and options: [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS
 ## Credits
 
 Built on **[majed-video](https://github.com/majedphotos/video-ad-editor)** by **Majed Alzaabi** (MIT) — the engine, the motion moves and the whole editing method are his work; thank you.
-This plugin adds the Algerian layer (Darija transcription, Algerian hook rules, Arabic glosses for Latin-script terms, French/English word order in captions) and a house style: alternating split screens and overlay bands, panels that never duplicate the caption, and careful cutting. Full list: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Changes: [CHANGELOG.md](CHANGELOG.md).
+This plugin adds the Algerian layer (Darija transcription, Algerian hook rules, Arabic glosses for Latin-script terms, French/English word order in captions) and a house style: alternating split screens and overlay bands, captions under the chin, panels that never duplicate the caption, and careful cutting. Full list: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

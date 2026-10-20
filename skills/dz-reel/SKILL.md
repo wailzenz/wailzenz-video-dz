@@ -18,6 +18,7 @@ description: مونتاج فيديو هدرة للكاميرا (talking head) إ
 > 10. **Tie every scene to word times** (`caps.json` words), never fixed seconds — a re-cut must not break the scenes.
 > 11. **Close-up framing:** the face card crops from `studio.json` → `cardTop`; if the mouth falls below y ≈ 1600 (Instagram's caption zone) raise it (≈ 0.3). `R_UP` shows a little more above the head automatically.
 > 12. **Not always a 50/50 split.** A panel can also be a band over the full-screen video, so his face keeps the whole frame: `R_OVT` = top band (≈ y 260–480, under Instagram's top bar) or `R_OVB` = bottom band (≈ y 1230–1410; the caption moves up above it). `panelIn` places the panel in the band by itself. The background doesn't have to be black: draw straight on the video (a dark soft shadow, `dsh()`, for contrast) or on `glass(x,y,w,h,r,a)` — a semi-transparent card in the theme colour (a ≈ 0.5–0.6). Reference look: a glass card on top with a step pill («07 / 08»), an icon, the idea's name (never the caption words — rule 7) and a segmented progress bar. Bands suit light moments (step counters, icons, progress, a before → after pill); keep the split screens for heavy explainers. Mix all of them through the video. `R_OVB` needs room under the chin: in a close-up the caption above the band lands on his mouth, so use `R_OVT` there — check the preview frame. Numbers or Latin text inside a panel: `T(text,x,y,font,colour,'center','ltr')`, or they come out reversed («08 / 07»).
+> 13. **Captions never cover the face — always under the chin.** Run `23_headcrop.py` on every video: it also writes the face track (`studio.json` → `face`). Wherever a caption sits over the full-screen picture (`R_FULL`, `R_OVT`, `R_OVB`, every caption style), the engine puts its top under the chin. In a close-up it slides that scene's video up (only as far as the hair allows; the strip left at the bottom shows the theme colour, mostly under Instagram's own caption) and drops to one line per page when two don't fit. The split layouts keep the caption off the face by design (`R_UP`: under the face card · `R_DOWN` / `R_LOWER`: on the seam above it). Never put captions above the head — a `theme.json` → `capY` above the head is overridden. `08_safe_check.js` fails on any caption that still lands on the face: give that sentence `R_UP` / `R_DOWN`, or `nocap`, and don't deliver before «✅ ولا كابشن على الوجه». `theme.json` → `"chinLift": false` turns the lift off (more sentences then need a split layout). Tip for the user: filming a little further back (chin around the middle of the frame) leaves room for full-screen captions without any lift.
 
 # ريل من فيديو كلام — بلا برنامج مونتاج
 
@@ -234,13 +235,14 @@ mkdir -p <work>/vfr && ffmpeg -v error -i <work>/cutz.mp4 -vf fps=30 -q:v 3 -y <
 - **الزوم مقفول لكل مقطع (6.0):** أول تشغيل يكتب `cut.json` ← `"zooms": {"25.05": 1.06, …}` (المفتاح بداية المقطع بثواني الأصل).
   تشيل أو تضيف أو تقسم مقطع؟ زوم الباقي ما يتزحلق، فإحداثيات رسمك تبقى صح. تغيّر زوم مقطع = عدّل رقمه. وترتيب `keep` حر (مقطع من آخر الكلام قبل اللي قبله مسموح).
 
-**6.1) ⛔ القصّ من فوق الراس — إلزامي بأي فيديو فيه كرت** (نص الشاشة، `R_DOWN`، `R_LOWER`):
+**6.1) ⛔ القصّ من فوق الراس + تتبع الوجه — إلزامي بأي فيديو** (wailzenz-video-dz: حتى بلا كرت — بلا كرت حط `--from 0`):
 
 ```bash
 python3 scripts/23_headcrop.py <work> --from <بداية أول كرت>
 ```
 
 - يكتب `studio.json` ← `cardTop`.
+- ويكتب `studio.json` ← `face` (تتبع الوجه كل 0.1 ث) — المحرّك يحط به الكابشن **تحت الذقن** (قاعدة 13 فوق).
 - قصّ **ثابت طول الفيديو** — بلا تتبع، ولا كاميرا تلحقه.
 - يبدأ من فوق أعلى نقطة وصلها راسه، بهامش صغير (1.5٪).
 - لا ينقص راسه، ولا يطلع سقف فاضي — «مساحة كبيرة فوق راسه» غلط بنفس الدرجة.
@@ -266,7 +268,7 @@ python3 scripts/23_headcrop.py <work> --from <بداية أول كرت>
 
 | اللحظة | المستطيل | الشكل |
 |---|---|---|
-| كلام بلا رسم | `R_FULL` | وجهه ملء الشاشة، أسفل الكابشن عند 1460 |
+| كلام بلا رسم | `R_FULL` | وجهه ملء الشاشة، الكابشن **تحت الذقن** (أسفله عند 1460؛ لقطة قريبة ← الفيديو يطلع شوية) |
 | أي رسم أو موشن | `R_DOWN` | الرسم فوق (y 280-520) ← الكابشن ← وجهه تحت بعرض الشاشة |
 | أي رسم — بالتناوب مع `R_DOWN` | `R_UP` | وجهه فوق (960 px) ← الكابشن تحته ← الرسم تحت (y 1290-1480) |
 | رسم خفيف (عدّاد خطوات، أيقونات، شريط تقدّم) | `R_OVT` / `R_OVB` | وجهه ملء الشاشة، والرسم بحزام فوق (y 260-480) أو تحت (y 1230-1410) — مباشرة على الفيديو أو على `glass()` شفاف |
@@ -275,6 +277,7 @@ python3 scripts/23_headcrop.py <work> --from <بداية أول كرت>
 
 - ⛔ **الكابشن ما ينكتب على وجه المتحدث أبداً.**
   بأي وضع فيه كرت فيديو، الكابشن كله فوق الكرت، وشريط التقدّم معه.
+  وبملء الشاشة (`R_FULL` / `R_OVT` / `R_OVB`) **تحت الذقن** — المحرّك يحسبه من `studio.json ← face`، و`08_safe_check.js` يفشل على أي كابشن على الوجه.
 - **اختيار الوضع قرارك من معنى الكلام** — الوجه أهم ولا الرسمة؟ (التفاصيل بـ`scenes.md`)
 
 **⛔ المنطقة الآمنة** (أزرار انستقرام — `08_safe_check.js` يفحصها):
@@ -436,6 +439,7 @@ node scripts/08_safe_check.js <work> --shot
 
 - يرسم كل لحظة مرتين بلونين مكان الفيديو، واللي ما يتغيّر = رسمك.
 - يعدّ نصوصك داخل مناطق الأزرار، ويتأكد إن أول كابشن قبل نص ثانية.
+- (wailzenz-video-dz) ويتأكد إن ولا كابشن على الوجه — ❌ = بدّل وضع الجملة (`R_UP` / `R_DOWN`) ولا `nocap`؛ ℹ️ = مشهد طلع فيه الفيديو شوية.
 - يخرج بالرمز 3 لو فيه خرق. `--shot` يطلّع `safe.jpg` **بس لو فشل**.
 - الفريم المجمّد بالانتقالات (`MV.frameAt`) ينحسب فيديو مو نص (6.0) — قبلها كان يعطي إنذار كاذب.
 - الحدود تتعدّل بـ`<work>/safe.json`.

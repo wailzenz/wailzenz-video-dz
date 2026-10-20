@@ -7,3 +7,6 @@ package-lock.json
 work/
 skills/dz-reel/bin/
 skills/dz-reel/motion/vendor/
+
+# built on first use by 23_headcrop.py (swiftc)
+skills/dz-reel/scripts/facetrack

@@ -38,6 +38,7 @@ function init(d){
   if(typeof t.capStill==='boolean') CAP_STILL=t.capStill;
   if(typeof t.bar==='boolean') BAR=t.bar;
   if(typeof t.hookZoom==='number') HOOK_END=t.hookZoom;
+  CHIN_LIFT=t.chinLift!==false;   /* wailzenz-video-dz: false = never lift the video for the chin rule (only report) */
   if(t.outro){ OUTRO_T={...OUTRO_T,...t.outro}; if(Array.isArray(t.outro.chips)) RECAP=t.outro.chips.map(c=>[c]); }   /* v3.5: كرت الختام من الثيم (الافتراضي إعلان السكل — ريل بودكاست لازم يغيّره) */   /* زوم الهوك + انتقال بعده (ثواني) — شوف hookZoom تحت */
   if(t.logo){const L=document.getElementById('LOGO'); if(L.getAttribute('src')!==t.logo) L.src=t.logo;}
   if(FONT!=='Cairo'){const l=document.createElement('link');l.rel='stylesheet';
@@ -51,6 +52,7 @@ function init(d){
     if(Array.isArray(st.scenes)&&st.scenes.length) SCENES=st.scenes.map(x=>({...x,collage:x.m==='R_COLLAGE'||!!x.collage,m:(typeof x.m==='string'?rectByName(x.m):x.m)}));
     if(Array.isArray(st.brollClips)) BROLL=st.brollClips;
     if(typeof st.cardTop==='number') CARD_TOP=st.cardTop;
+    FACE=(st.face&&Array.isArray(st.face.chin)&&st.face.chin.length)?st.face:null;   /* wailzenz-video-dz: face track for the chin rule (23_headcrop.py) */
     if(st.outro){ OUTRO_T={...OUTRO_T,...st.outro}; if(Array.isArray(st.outro.chips)) RECAP=st.outro.chips.map(c=>[c]); }
     if(Array.isArray(st.stickers)) STICK=st.stickers;
     BEHIND_OFF=Array.isArray(st.behindOff)?st.behindOff:[];
@@ -172,7 +174,8 @@ let _RES=false;
 function resolveScenes(){ if(_RES||!CAPS.length)return; _RES=true;
   SCENES.forEach(s=>{ if(s.m!==R_DOWN)return; const gb=s.gb||500; let lines=1;
     CAPS.forEach(c=>{ if(c.e>s.s&&c.s<s.e) lines=Math.max(lines,layout(c.w).length); });
-    s.m=rDown(gb,lines); }); }
+    s.m=rDown(gb,lines); });
+  chinLift(); }   /* wailzenz-video-dz: full-screen scenes — room for the caption under the chin */
 const isFull=R=>R.w>=1079&&R.h>=1919;   /* ملء الشاشة حقيقةً — لا تعتمد على r */
 function vtarget(t){ resolveScenes(); let i=SCENES.findIndex(s=>t>=s.s&&t<s.e); if(i<0)i=SCENES.length-1; return SCENES[i].m; }
 /* المشهدان (a ← b) ونسبة الانتقال k بينهم (eio داخل نافذة TR) — المستطيل والفيديو ياخذون نفس القيم */
@@ -196,6 +199,46 @@ function vcrop(R,sw,shh){
   const sx=(sw-cw)/2, sy0=(shh-ch)*FACE_ANCH, sy=ctop==null?sy0:lerp(sy0,cl(ctop*shh,0,shh-ch),kc);
   return {sc,sx,sy,cw,ch};
 }
+/* ═══ wailzenz-video-dz (2026-10-20) — the user's rule: «captions never cover the face — always under the chin» ═══
+   studio.json → "face": {step, top:[…], chin:[…]} (fractions of the frame height every `step` s, from 23_headcrop.py).
+   • underChin(): wherever a caption sits over the full-screen picture (R_FULL, R_OVT, R_OVB), its top edge goes below the chin.
+   • chinLift(): a close-up has no room for that above Instagram's caption zone → that scene's video slides up (rect y = −lift;
+     the strip left at the bottom shows the theme background, mostly under Instagram's own caption) — never into the head
+     (top ≥ y 180, or under the R_OVT band), and never in a scene with a cut-out / behind-the-head effect (those layers draw unshifted).
+   • What still can't fit is kept in window.__onFace → 08_safe_check.js fails on it. theme.json → "chinLift": false = report only. */
+let FACE=null, CHIN_LIFT=true;
+const CHIN_GAP=26, CAP_FLOOR=1480, OVB_FLOOR=1212, LIFT_HEAD_MIN=110, OVT_HEAD_MIN=500;   /* hair may go under Instagram's top bar — text never does */
+function _faceVals(arr,a,b){ if(!FACE||!arr) return []; const n=arr.length, i0=cl(Math.floor(a/FACE.step),0,n-1), i1=cl(Math.ceil(b/FACE.step),0,n-1), v=[];
+  for(let i=i0;i<=i1;i++) if(typeof arr[i]==='number') v.push(arr[i]); return v.sort((x,y)=>x-y); }
+function chinAt(a,b){ const v=_faceVals(FACE&&FACE.chin,a,b); return v.length?v[Math.floor(0.9*(v.length-1))]:null; }   /* lowest chin in [a,b] (90th pct — one bad detection doesn't count) */
+function headAt(a,b){ const v=_faceVals(FACE&&FACE.top,a,b); return v.length?v[Math.ceil(0.1*(v.length-1))]:null; }    /* highest head top in [a,b] */
+function faceY(R,f){ const sw=VF.naturalWidth||1080, shh=VF.naturalHeight||1920, c=vcrop(R,sw,shh); return R.y+(f*shh-c.sy)*c.sc; }   /* frame fraction → canvas y */
+function underChin(by,bh,c,t,floor){   /* by = proposed top of the caption, bh = its height → top under the chin when the face is behind it */
+  const R=vtarget(t); if(!FACE||!R||!isFull(R)||R.off) return by;
+  const f=chinAt(c.s,c.e); if(f==null) return by;
+  const need=Math.round(faceY(R,f)+CHIN_GAP); if(by>=need) return by;
+  if(need+bh<=floor) return need;
+  (window.__onFace=window.__onFace||{})[c.s.toFixed(2)]={s:+c.s.toFixed(2),e:+c.e.toFixed(2),chin:Math.round(need-CHIN_GAP),short:Math.round(need+bh-floor)};
+  return Math.max(by,floor-bh); }
+function capLines(c,t){   /* card captions: 1 line per page when 2 don't fit under the chin but 1 does */
+  const R=vtarget(t); if(!FACE||!R||!isFull(R)||R.off||R.up||R.y>700) return MAXLINES;
+  const f=chinAt(c.s,c.e); if(f==null) return MAXLINES; const need=faceY(R,f)+CHIN_GAP, floor=R.ov==='bottom'?OVB_FLOOR:CAP_FLOOR;
+  return (need+MAXLINES*LH+PADY*2>floor&&need+LH+PADY*2<=floor)?1:MAXLINES; }
+function _personFx(a,b){ if(!BEHIND) return false; const hit=r=>r[0]<b&&r[1]>a;
+  return (BEHIND.lines||[]).some(l=>hit([l.s,l.e]))||(BEHIND.cutouts||[]).some(hit)||(BEHIND.headouts||[]).some(hit)
+    ||(BEHIND.ranges||[]).some(r=>hit([(r[0]-1)/30,(r[1]-1)/30])); }
+function chinLift(){ if(!FACE||!CHIN_LIFT) return;
+  SCENES.forEach(s=>{ const R=s.m; if(!R||!isFull(R)||R.off||R.lift||s.nocap||_personFx(s.s,s.e)) return;
+    const floor=R.ov==='bottom'?OVB_FLOOR:CAP_FLOOR, need=[];   /* per caption: lift for 2-line pages (n2) · for 1-line pages (n1, card style) */
+    CAPS.forEach(c=>{ if(!(c.e>s.s&&c.s<s.e)) return; const f=chinAt(c.s,c.e); if(f==null) return;
+      const n=Math.min(MAXLINES,layout(c.w).length), y=faceY(R,f)+CHIN_GAP-floor+6;
+      need.push({n2:y+n*LH+PADY*2, n1:y+(CAPSTYLE==='card'?1:n)*LH+PADY*2}); });
+    const h=headAt(s.s,s.e); if(!need.length||h==null) return;
+    const room=faceY(R,h)-(R.ov==='top'?OVT_HEAD_MIN:LIFT_HEAD_MIN);
+    const L=Math.round(Math.min(Math.max(...need.map(x=>x.n2)),room));
+    /* lift only if it puts at least one more caption under the chin — what still can't fit is listed by 08_safe_check.js */
+    if(L>4&&need.some(x=>x.n1>0&&x.n1<=L)) s.m={...R,y:R.y-L,lift:L}; }); }
+window.__chinInfo=()=>({face:!!FACE,lift:CHIN_LIFT,lifts:SCENES.filter(s=>s.m&&s.m.lift).map(s=>({s:+(+s.s).toFixed(2),e:+Math.min(+s.e,VEND).toFixed(2),lift:s.m.lift})),onFace:Object.values(window.__onFace||{})});
 function drawVideo(t){
   const R=vrect(t), sw=VF.naturalWidth||1080, shh=VF.naturalHeight||1920, T=vtrans(t);
   X.save();
@@ -330,8 +373,8 @@ function caption(t){
   if(lt<0.2){const k=lt/0.2;a=ease(k);if(!CAP_STILL){dy=(1-ease(k))*28;sc=0.93+0.07*back(k);}}
   if(rt<0.13){const k=rt/0.13;a=k;if(!CAP_STILL)dy=-(1-k)*10;}
   /* ⛔ سطران بالكثير (طلب المستخدم 5 سبتمبر): الجملة الطويلة تنقسم لصفحات من سطرين، وتُعرض الصفحة اللي فيها الكلمة المنطوقة */
-  let L=layout(c.w);
-  if(L.length>MAXLINES){const pages=[];for(let i=0;i<L.length;){let n=MAXLINES;while(i+n<L.length&&L[i+n].items[0]&&L[i+n].items[0].gloss)n++;pages.push(L.slice(i,i+n));i+=n;}
+  let L=layout(c.w); const ML=CAPSTYLE==='card'?capLines(c,t):MAXLINES;   /* wailzenz-video-dz: fewer lines under a low chin */
+  if(L.length>ML){const pages=[];for(let i=0;i<L.length;){let n=ML;while(i+n<L.length&&L[i+n].items[0]&&L[i+n].items[0].gloss)n++;pages.push(L.slice(i,i+n));i+=n;}
     let pg=pages.find(p=>{const f=p[0].items[0],l=p[p.length-1].items[p[p.length-1].items.length-1];return t>=f.s&&t<l.e;});
     if(!pg){pg=pages.find(p=>t<p[0].items[0].s)||pages[pages.length-1];}
     L=pg;}
@@ -388,7 +431,8 @@ function caption(t){
       const cur=c.w.filter(w=>t>=w.s).slice(-1)[0]; if(!cur) return;
       let fs=170; X.font='900 '+fs+'px '+FONT; while(X.measureText(cur.t).width>960&&fs>70){fs-=10;X.font='900 '+fs+'px '+FONT;}
       const wv={...cur,w:X.measureText(cur.t).width}; const k=ease(Math.min(1,(t-cur.s)/0.18));
-      const _Rb=vtarget(t), _yb=(_Rb.y>700&&!_Rb.off)?Math.max(260,_Rb.y-120):1200;   /* 23 سبتمبر: ما يطيح على وجهه بوضع الكرت */
+      const _Rb=vtarget(t), _yb0=(_Rb.y>700&&!_Rb.off)?Math.max(260,_Rb.y-120):1200;
+      const _yb=(_Rb.y>700&&!_Rb.off)?_yb0:underChin(_yb0-fs*0.6,fs*1.2,c,t,CAP_FLOOR)+fs*0.6;   /* wailzenz-video-dz: under the chin */   /* 23 سبتمبر: ما يطيح على وجهه بوضع الكرت */
       X.save(); X.globalAlpha=a*k; X.textAlign='right'; X.textBaseline='middle';
       const bs=CAP_STILL?1:0.85+0.15*k;   /* capStill: الكلمة الضخمة تطلع بالشفافية بس */
       X.translate(540,_yb); X.scale(bs,bs); X.translate(-540,-_yb);
@@ -402,7 +446,8 @@ function caption(t){
     const LH2=Math.round(FS2*1.33); const bh2=LL.length*LH2;
     /* ⛔ قاعدة ماجد (23 سبتمبر): الكابشن ما ينكتب على وجهه أبداً. الستايلات بلا كرت كانت تثبّت عند 1400
        مهما كان وضع الفيديو، فبوضع الكرت (R_DOWN/R_LOWER) تطيح الكلمات على وجهه. الحين تطلع فوق الكرت. */
-    const _Rc=vtarget(t), by2=_Rc.up?_Rc.y+_Rc.h+36:_Rc.ov?ovCap(_Rc,(t>=CAP_Y_FROM&&CAP_Y<1460?CAP_Y:1400),bh2)-bh2:(_Rc.y>700&&!_Rc.off)?Math.max(200,_Rc.y-46-bh2):((t>=CAP_Y_FROM&&CAP_Y<1460?CAP_Y:1400)-bh2);
+    const _Rc=vtarget(t), by2a=_Rc.up?_Rc.y+_Rc.h+36:_Rc.ov?ovCap(_Rc,(t>=CAP_Y_FROM&&CAP_Y<1460?CAP_Y:1400),bh2)-bh2:(_Rc.y>700&&!_Rc.off)?Math.max(200,_Rc.y-46-bh2):((t>=CAP_Y_FROM&&CAP_Y<1460?CAP_Y:1400)-bh2);
+    const by2=(_Rc.up||(_Rc.y>700&&!_Rc.off))?by2a:underChin(by2a,bh2,c,t,_Rc.ov==='bottom'?OVB_FLOOR:CAP_FLOOR);   /* wailzenz-video-dz: under the chin */
     X.save();X.globalAlpha=a;X.translate(540,by2+bh2/2+dy);X.scale(sc,sc);X.translate(-540,-(by2+bh2/2));
     X.textAlign='right';X.textBaseline='middle'; X.font='900 '+FS2+'px '+FONT;
     let lastX=null,lastY=null;
@@ -415,7 +460,8 @@ function caption(t){
   const CUT=(cutoutActive(t)||headoutActive(t))&&PTOP>200;   /* الكابشن فوق راسه بالوضعين */
   const SEAM=0;   /* ⛔ 23 سبتمبر: كان الكرت يركب 42٪ منه على حافة الفيديو فيغطي جبهة المتحدث — الحين فوق الكرت بالكامل */
   const UPC=!!_R.up&&!CUT;   /* R_UP: caption right under his face, above the bottom panel */
-  const bx=540-bw/2,by=UPC?_R.y+_R.h+36:(_R.ov&&!CUT?ovCap(_R,(t>=CAP_Y_FROM?CAP_Y:1460),bh):CUT?PTOP-46:(LOW?_R.y-60+SEAM:(t>=CAP_Y_FROM?CAP_Y:1460)))-bh;   /* 1460 عادةً · وعلى حافة الفيديو بوضع «الفيديو تحت» */
+  const bx=540-bw/2,by0=UPC?_R.y+_R.h+36:(_R.ov&&!CUT?ovCap(_R,(t>=CAP_Y_FROM?CAP_Y:1460),bh):CUT?PTOP-46:(LOW?_R.y-60+SEAM:(t>=CAP_Y_FROM?CAP_Y:1460)))-bh;   /* 1460 عادةً · وعلى حافة الفيديو بوضع «الفيديو تحت» */
+  const by=(UPC||LOW||CUT)?by0:underChin(by0,bh,c,t,_R.ov==='bottom'?OVB_FLOOR:CAP_FLOOR);   /* wailzenz-video-dz: under the chin, never on the face */
   X.save();X.globalAlpha=a;X.translate(540,by+bh/2+dy);X.scale(sc,sc);X.translate(-540,-(by+bh/2));
   sh(48,20,0.30);X.fillStyle=cBG(0.96);rr(bx,by,bw,bh,38);X.fill();nsh();
   X.strokeStyle=cINK(0.09);X.lineWidth=2.5;rr(bx,by,bw,bh,38);X.stroke();
